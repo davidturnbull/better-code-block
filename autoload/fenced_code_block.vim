@@ -185,6 +185,13 @@ endfunction
 
 " Parse a single line number
 function! s:parse_single_line(part)
+  " If the part contains a dash, it's a malformed range that was already 
+  " rejected by s:parse_range, so return 0
+  if a:part =~# '-'
+    call s:debug_message("Rejected malformed range as single line: " . a:part)
+    return 0
+  endif
+
   let num = str2nr(a:part)
   if num > 0
     call s:debug_message("Added single line " . num)
