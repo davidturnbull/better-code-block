@@ -228,13 +228,17 @@ function! s:find_code_blocks()
     endif
     
     " Check for code block end (exact match with the fence that started it)
-    if in_code_block && line =~ '^' . fence_type . '$'
-      let current_block['end_line'] = line_num
-      let current_block['line_count'] = code_block_lines
-      call add(code_blocks, current_block)
-      let in_code_block = 0
-      call s:debug_message("Code block ended at line " . line_num . " with fence: " . fence_type)
-      continue
+    if in_code_block
+      " Use matchstr instead of =~ to avoid the E33 error
+      let is_fence_end = matchstr(line, '^' . escape(fence_type, '\.^$*[]~') . '$') !=# ''
+      if is_fence_end
+        let current_block['end_line'] = line_num
+        let current_block['line_count'] = code_block_lines
+        call add(code_blocks, current_block)
+        let in_code_block = 0
+        call s:debug_message("Code block ended at line " . line_num . " with fence: " . fence_type)
+        continue
+      endif
     endif
     
     " Inside code block - track content
@@ -697,7 +701,14 @@ function! s:enable_line_numbers()
   " Only set signcolumn if using the sign method
   let method = s:determine_line_number_method()
   if method == 'sign'
-    set signcolumn=yes:1
+    " Check Vim version for signcolumn syntax compatibility
+    if exists('*execute') && execute('version') =~ '8.\d\+'
+      " Vim 8+ supports the yes:1 syntax
+      set signcolumn=yes:1
+    else
+      " Older Vim versions just use yes/no
+      set signcolumn=yes
+    endif
   endif
 endfunction
 
@@ -818,3 +829,67 @@ function! fenced_code_block#get_highlight_groups_at_cursor()
   
   return highlight_groups 
 endfunction 
+
+" Add wrapper functions for testing script-local functions
+
+" Test wrapper for s:detect_language
+function! fenced_code_block#test_detect_language(fence_line)
+  return s:detect_language(a:fence_line)
+endfunction
+
+" Test wrapper for s:parse_style_attributes
+function! fenced_code_block#test_parse_style_attributes(attrs)
+  return s:parse_style_attributes(a:attrs)
+endfunction
+
+" Test wrapper for s:determine_line_number_method
+function! fenced_code_block#test_determine_line_number_method()
+  return s:determine_line_number_method()
+endfunction
+
+" Test wrapper for s:find_code_blocks
+function! fenced_code_block#test_find_code_blocks()
+  return s:find_code_blocks()
+endfunction
+
+" Test wrapper for s:get_range_lines
+function! fenced_code_block#test_get_range_lines(start, end)
+  return s:get_range_lines(a:start, a:end)
+endfunction
+
+" Test wrapper for s:parse_single_line
+function! fenced_code_block#test_parse_single_line(part)
+  return s:parse_single_line(a:part)
+endfunction
+
+" Test wrapper for s:validate_highlight_lines
+function! fenced_code_block#test_validate_highlight_lines(lines, block_size, start_line)
+  return s:validate_highlight_lines(a:lines, a:block_size, a:start_line)
+endfunction
+
+" Fix the signcolumn setting to be compatible with more Vim versions
+function! s:enable_line_numbers()
+  set number
+  
+  " Only set signcolumn if using the sign method
+  let method = s:determine_line_number_method()
+  if method == 'sign'
+    " Check Vim version for signcolumn syntax compatibility
+    if exists('*execute') && execute('version') =~ '8.\d\+'
+      " Vim 8+ supports the yes:1 syntax
+      set signcolumn=yes:1
+    else
+      " Older Vim versions just use yes/no
+      set signcolumn=yes
+    endif
+  endif
+endfunction
+
+" Fix the signcolumn disable to be compatible
+function! s:disable_line_numbers()
+  " Reset signcolumn if needed
+  let method = s:determine_line_number_method()
+  if method == 'sign'
+    set signcolumn=auto
+  endif
+endfunction
