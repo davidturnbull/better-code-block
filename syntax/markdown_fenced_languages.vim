@@ -1,4 +1,4 @@
-" Syntax file for better fenced code block language detection
+" Syntax file for Fenced code block language detection
 " This file defines the languages supported in fenced code blocks
 
 " Define supported languages and their syntax files
@@ -57,11 +57,11 @@ function! s:load_syntax_for(lang)
 endfunction
 
 " Load syntax for all supported languages
-function! better_fenced_code_block#load_all_syntaxes()
+function! fenced_code_block#load_all_syntaxes()
   for [lang, _] in items(s:supported_languages)
     call s:load_syntax_for(lang)
   endfor
 endfunction
 
 " Initialize syntax loading
-call better_fenced_code_block#load_all_syntaxes() 
+call fenced_code_block#load_all_syntaxes() 
