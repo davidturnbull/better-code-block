@@ -42,6 +42,7 @@ if !exists('g:fenced_code_block_keyword_aliases')
 endif
 
 " Enable/disable relative line numbers in code blocks
+" Values: 1 or 'always' (always show), 0 or 'never' (never show), 'with_highlights' (only with highlights)
 if !exists('g:fenced_code_block_show_line_numbers')
   let g:fenced_code_block_show_line_numbers = 1
 endif

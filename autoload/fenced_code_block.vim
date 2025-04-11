@@ -311,7 +311,15 @@ function! fenced_code_block#do_apply_highlighting()
         endif
         
         " Add line number based on configured method
-        if g:fenced_code_block_show_line_numbers
+        if (type(g:fenced_code_block_show_line_numbers) == v:t_number && g:fenced_code_block_show_line_numbers) ||
+              \ g:fenced_code_block_show_line_numbers == 'always' ||
+              \ (g:fenced_code_block_show_line_numbers == 'with_highlights' && !empty(lines_to_highlight))
+          call s:place_line_number(line_num, relative_line)
+        endif
+      else
+        " For blocks without highlight specifications
+        if (type(g:fenced_code_block_show_line_numbers) == v:t_number && g:fenced_code_block_show_line_numbers) ||
+              \ g:fenced_code_block_show_line_numbers == 'always'
           call s:place_line_number(line_num, relative_line)
         endif
       endif
@@ -711,16 +719,25 @@ endfunction
 
 " Function to toggle line numbers
 function! fenced_code_block#toggle_line_numbers()
-  let g:fenced_code_block_show_line_numbers = !g:fenced_code_block_show_line_numbers
+  " Cycle through options: 'always' -> 'with_highlights' -> 'never' -> 'always'
+  if type(g:fenced_code_block_show_line_numbers) == v:t_number
+    " Convert from legacy boolean to string
+    let g:fenced_code_block_show_line_numbers = g:fenced_code_block_show_line_numbers ? 'always' : 'never'
+  endif
   
-  if g:fenced_code_block_show_line_numbers
+  if g:fenced_code_block_show_line_numbers == 'always'
+    let g:fenced_code_block_show_line_numbers = 'with_highlights'
     call s:enable_line_numbers()
-  else
+  elseif g:fenced_code_block_show_line_numbers == 'with_highlights'
+    let g:fenced_code_block_show_line_numbers = 'never'
     call s:disable_line_numbers()
+  else
+    let g:fenced_code_block_show_line_numbers = 'always'
+    call s:enable_line_numbers()
   endif
   
   call fenced_code_block#apply_highlighting()
-  echo "Line numbers " . (g:fenced_code_block_show_line_numbers ? "enabled" : "disabled")
+  echo "Line numbers: " . g:fenced_code_block_show_line_numbers
 endfunction
 
 " Enable line numbers in the buffer

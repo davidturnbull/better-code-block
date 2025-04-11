@@ -86,7 +86,10 @@ You can configure the plugin behavior with the following variables:
                                   Default: ['hl', 'mark', 'emphasize']
 
 *g:fenced_code_block_show_line_numbers*
-                                  Enable/disable line numbers (1=on, 0=off)
+                                  Controls line number display:
+                                  '1' or 'always' (always show numbers),
+                                  '0' or 'never' (never show numbers),
+                                  'with_highlights' (only when highlights exist)
 
 *g:fenced_code_block_line_number_method*
                                   How to display line numbers:
@@ -111,7 +114,7 @@ Configuration examples:
     let g:fenced_code_block_style = 'yellow'
     
     " Disable line numbers in code blocks
-    let g:fenced_code_block_show_line_numbers = 0
+    let g:fenced_code_block_show_line_numbers = 'never'
     
     " Register a custom highlight style
     call FencedCodeBlockRegisterStyle('my_style', 'ctermbg', 'lightblue', 'guibg', '#AADDFF')
@@ -156,4 +159,4 @@ You can define your own mapping:
 
 This plugin uses the same license as Vim itself.
 
- vim:tw=78:ts=8:ft=help:norl: 
+ vim:tw=78:ts=8:ft=help:norl:    
