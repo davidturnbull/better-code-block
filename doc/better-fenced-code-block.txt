@@ -66,55 +66,55 @@ Alternative keywords:
 
 You can configure the plugin behavior with the following variables:
 
-*g:markdown_highlight_style*        Highlight style (default: 'green')
+*g:better_fenced_code_block_style*        Highlight style (default: 'green')
                                   Available: 'green', 'blue', 'yellow', 'cyan',
                                   'magenta', 'invert', 'bold', 'italic',
                                   'underline', 'undercurl', or custom styles
 
-*g:markdown_highlight_custom*       Dictionary of custom highlight styles
+*g:better_fenced_code_block_custom*       Dictionary of custom highlight styles
 
-*g:markdown_highlight_debug*        Debug mode (0=off, 1=on)
+*g:better_fenced_code_block_debug*        Debug mode (0=off, 1=on)
 
-*g:markdown_highlight_extensions*   File extensions to process
+*g:better_fenced_code_block_extensions*   File extensions to process
                                   Default: ['md', 'markdown', 'txt']
 
-*g:markdown_highlight_keyword*      Primary highlight keyword (default: 'highlight')
+*g:better_fenced_code_block_keyword*      Primary highlight keyword (default: 'highlight')
 
-*g:markdown_highlight_keyword_aliases* 
+*g:better_fenced_code_block_keyword_aliases* 
                                   Alternative keywords
                                   Default: ['hl', 'mark', 'emphasize']
 
-*g:markdown_highlight_show_line_numbers*
+*g:better_fenced_code_block_show_line_numbers*
                                   Enable/disable line numbers (1=on, 0=off)
 
-*g:markdown_highlight_line_number_method*
+*g:better_fenced_code_block_line_number_method*
                                   How to display line numbers:
                                   'nvim', 'prop', 'sign', or 'auto'
 
-*g:markdown_highlight_line_number_format*
+*g:better_fenced_code_block_line_number_format*
                                   Format string for line numbers (default: ' %d ')
 
-*g:markdown_highlight_line_number_style*
+*g:better_fenced_code_block_line_number_style*
                                   Highlight group for line numbers
 
-*g:markdown_highlight_error_style*  Style for errors (default: 'red')
+*g:better_fenced_code_block_error_style*  Style for errors (default: 'red')
 
-*g:markdown_highlight_update_delay* Update delay in ms (0 for immediate)
+*g:better_fenced_code_block_update_delay* Update delay in ms (0 for immediate)
 
-*g:markdown_highlight_fence_patterns*
+*g:better_fenced_code_block_fence_patterns*
                                   Custom fence patterns for code blocks
 
 Configuration examples:
 >
     " Change default highlight style to yellow
-    let g:markdown_highlight_style = 'yellow'
+    let g:better_fenced_code_block_style = 'yellow'
     
     " Disable line numbers in code blocks
-    let g:markdown_highlight_show_line_numbers = 0
+    let g:better_fenced_code_block_show_line_numbers = 0
     
     " Register a custom highlight style
-    call MarkdownHighlightRegisterStyle('my_style', 'ctermbg', 'lightblue', 'guibg', '#AADDFF')
-    let g:markdown_highlight_style = 'my_style'
+    call BetterFencedCodeBlockRegisterStyle('my_style', 'ctermbg', 'lightblue', 'guibg', '#AADDFF')
+    let g:better_fenced_code_block_style = 'my_style'
 <
 
 ===============================================================================
@@ -122,20 +122,20 @@ Configuration examples:
 
 The plugin provides the following commands:
 
-*:MarkdownHighlightRefresh*       Force refresh of all highlights
-*:MarkdownHighlightClear*         Clear all highlights
-*:MarkdownHighlightToggleDebug*   Toggle debug mode
-*:MarkdownHighlightStyle* {style} Change highlight style
-*:MarkdownToggleLineNumbers*      Toggle line numbers in code blocks
-*:MarkdownHighlightRegisterStyle* Register a custom highlight style
+*:BetterFencedCodeBlockRefresh*       Force refresh of all highlights
+*:BetterFencedCodeBlockClear*         Clear all highlights
+*:BetterFencedCodeBlockToggleDebug*   Toggle debug mode
+*:BetterFencedCodeBlockStyle* {style} Change highlight style
+*:BetterFencedCodeBlockToggleLineNumbers*      Toggle line numbers in code blocks
+*:BetterFencedCodeBlockRegisterStyle* Register a custom highlight style
 
 Examples:
 >
     " Change to blue highlight style
-    :MarkdownHighlightStyle blue
+    :BetterFencedCodeBlockStyle blue
     
     " Register a custom inverted yellow style
-    :MarkdownHighlightRegisterStyle bright_yellow guibg #FFFF00 guifg #000000 gui bold
+    :BetterFencedCodeBlockRegisterStyle bright_yellow guibg #FFFF00 guifg #000000 gui bold
 <
 
 ===============================================================================

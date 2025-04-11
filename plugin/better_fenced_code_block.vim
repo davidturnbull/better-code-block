@@ -12,76 +12,76 @@ let g:loaded_better_fenced_code_block = 1
 " Plugin configuration
 " ==============================================================================
 " Default highlight style - can be overridden by user
-if !exists('g:markdown_highlight_style')
-  let g:markdown_highlight_style = 'green'
+if !exists('g:better_fenced_code_block_style')
+  let g:better_fenced_code_block_style = 'green'
 endif
 
 " Custom highlight definition - override default styles
-if !exists('g:markdown_highlight_custom')
-  let g:markdown_highlight_custom = {}
+if !exists('g:better_fenced_code_block_custom')
+  let g:better_fenced_code_block_custom = {}
 endif
 
 " Debug mode - set to 1 to enable debug messages
-if !exists('g:markdown_highlight_debug')
-  let g:markdown_highlight_debug = 0
+if !exists('g:better_fenced_code_block_debug')
+  let g:better_fenced_code_block_debug = 0
 endif
 
 " File extensions to automatically process
-if !exists('g:markdown_highlight_extensions')
-  let g:markdown_highlight_extensions = ['md', 'markdown', 'txt']
+if !exists('g:better_fenced_code_block_extensions')
+  let g:better_fenced_code_block_extensions = ['md', 'markdown', 'txt']
 endif
 
 " Primary highlight keyword
-if !exists('g:markdown_highlight_keyword')
-  let g:markdown_highlight_keyword = 'highlight'
+if !exists('g:better_fenced_code_block_keyword')
+  let g:better_fenced_code_block_keyword = 'highlight'
 endif
 
 " Alias keywords for highlight
-if !exists('g:markdown_highlight_keyword_aliases')
-  let g:markdown_highlight_keyword_aliases = ['hl', 'mark', 'emphasize']
+if !exists('g:better_fenced_code_block_keyword_aliases')
+  let g:better_fenced_code_block_keyword_aliases = ['hl', 'mark', 'emphasize']
 endif
 
 " Enable/disable relative line numbers in code blocks
-if !exists('g:markdown_highlight_show_line_numbers')
-  let g:markdown_highlight_show_line_numbers = 1
+if !exists('g:better_fenced_code_block_show_line_numbers')
+  let g:better_fenced_code_block_show_line_numbers = 1
 endif
 
 " Line number display method: 'nvim' (virtual text), 'prop' (text properties), 'sign' (signs)
-if !exists('g:markdown_highlight_line_number_method')
-  let g:markdown_highlight_line_number_method = 'auto'
+if !exists('g:better_fenced_code_block_line_number_method')
+  let g:better_fenced_code_block_line_number_method = 'auto'
 endif
 
 " Line number format - can include %d for the line number
-if !exists('g:markdown_highlight_line_number_format')
-  let g:markdown_highlight_line_number_format = ' %d '
+if !exists('g:better_fenced_code_block_line_number_format')
+  let g:better_fenced_code_block_line_number_format = ' %d '
 endif
 
 " Line number style
-if !exists('g:markdown_highlight_line_number_style')
-  let g:markdown_highlight_line_number_style = 'LineNr'
+if !exists('g:better_fenced_code_block_line_number_style')
+  let g:better_fenced_code_block_line_number_style = 'LineNr'
 endif
 
 " Error style for invalid line numbers
-if !exists('g:markdown_highlight_error_style')
-  let g:markdown_highlight_error_style = 'red'
+if !exists('g:better_fenced_code_block_error_style')
+  let g:better_fenced_code_block_error_style = 'red'
 endif
 
 " Update delay in milliseconds (0 for immediate)
-if !exists('g:markdown_highlight_update_delay')
-  let g:markdown_highlight_update_delay = 0
+if !exists('g:better_fenced_code_block_update_delay')
+  let g:better_fenced_code_block_update_delay = 0
 endif
 
 " Custom fence patterns (must contain at least one capture group for the fence characters)
-if !exists('g:markdown_highlight_fence_patterns')
-  let g:markdown_highlight_fence_patterns = [
+if !exists('g:better_fenced_code_block_fence_patterns')
+  let g:better_fenced_code_block_fence_patterns = [
         \ '^\(`\{3,}\)',
         \ '^\(\~\{3,}\)'
         \ ]
 endif
 
 " Highlight method: 'background', 'foreground', 'underline', 'undercurl', 'bold', 'italic', 'reverse'
-if !exists('g:markdown_highlight_method')
-  let g:markdown_highlight_method = 'background'
+if !exists('g:better_fenced_code_block_method')
+  let g:better_fenced_code_block_method = 'background'
 endif
 
 " Plugin initialization
@@ -91,11 +91,11 @@ function! s:SetupPlugin()
   call better_fenced_code_block#setup_highlight_style()
   
   " Ensure line numbers are shown (file numbers on left)
-  if g:markdown_highlight_show_line_numbers
+  if g:better_fenced_code_block_show_line_numbers
     set number
     
     " Only set signcolumn if using the sign method
-    let method = g:markdown_highlight_line_number_method
+    let method = g:better_fenced_code_block_line_number_method
     if method == 'auto' && !has('nvim-0.5') && !exists('*prop_type_add')
       set signcolumn=yes:1
     elseif method == 'sign'
@@ -104,7 +104,7 @@ function! s:SetupPlugin()
   endif
   
   " Create autocommands for automatic highlighting
-  let extensions = join(map(copy(g:markdown_highlight_extensions), '"*." . v:val'), ',')
+  let extensions = join(map(copy(g:better_fenced_code_block_extensions), '"*." . v:val'), ',')
   
   " Define autocommands group
   augroup BetterFencedCodeBlock
@@ -117,27 +117,27 @@ function! s:SetupPlugin()
   augroup END
   
   " Define plugin commands
-  command! MarkdownHighlightRefresh call better_fenced_code_block#apply_highlighting()
-  command! MarkdownHighlightClear call better_fenced_code_block#clear_highlights()
+  command! BetterFencedCodeBlockRefresh call better_fenced_code_block#apply_highlighting()
+  command! BetterFencedCodeBlockClear call better_fenced_code_block#clear_highlights()
   
   " Define command to toggle debug mode
-  command! MarkdownHighlightToggleDebug let g:markdown_highlight_debug = !g:markdown_highlight_debug | 
-        \ echo "Debug mode " . (g:markdown_highlight_debug ? "enabled" : "disabled")
+  command! BetterFencedCodeBlockToggleDebug let g:better_fenced_code_block_debug = !g:better_fenced_code_block_debug | 
+        \ echo "Debug mode " . (g:better_fenced_code_block_debug ? "enabled" : "disabled")
   
   " Expose highlight style changing command
-  command! -nargs=1 -complete=customlist,better_fenced_code_block#complete_styles MarkdownHighlightStyle call better_fenced_code_block#change_highlight_style(<q-args>)
+  command! -nargs=1 -complete=customlist,better_fenced_code_block#complete_styles BetterFencedCodeBlockStyle call better_fenced_code_block#change_highlight_style(<q-args>)
   
   " Toggle line numbers command
-  command! MarkdownToggleLineNumbers call better_fenced_code_block#toggle_line_numbers()
+  command! BetterFencedCodeBlockToggleLineNumbers call better_fenced_code_block#toggle_line_numbers()
   
   " Register a custom highlight style
-  command! -nargs=+ MarkdownHighlightRegisterStyle call better_fenced_code_block#register_custom_style(<f-args>)
+  command! -nargs=+ BetterFencedCodeBlockRegisterStyle call better_fenced_code_block#register_custom_style(<f-args>)
 endfunction
 
 " Initialize plugin
 call s:SetupPlugin()
 
 " Setup for immediate highlighting in current buffer
-if expand('%:e') =~ join(g:markdown_highlight_extensions, '\|')
+if expand('%:e') =~ join(g:better_fenced_code_block_extensions, '\|')
   call better_fenced_code_block#apply_highlighting()
 endif

@@ -7,7 +7,7 @@ function! better_fenced_code_block#parse_highlight_spec(line)
   let lines_to_highlight = []
   
   " Try primary keyword and aliases
-  let keywords = [g:markdown_highlight_keyword] + g:markdown_highlight_keyword_aliases
+  let keywords = [g:better_fenced_code_block_keyword] + g:better_fenced_code_block_keyword_aliases
   let highlight_spec = ''
   
   for keyword in keywords
@@ -98,12 +98,12 @@ endfunction
 " Apply highlighting to specified lines
 function! better_fenced_code_block#apply_highlighting()
   " If delay is set and we're in event-triggered update, debounce it
-  if g:markdown_highlight_update_delay > 0 && exists('b:markdown_update_timer')
-    call timer_stop(b:markdown_update_timer)
+  if g:better_fenced_code_block_update_delay > 0 && exists('b:better_fenced_code_block_update_timer')
+    call timer_stop(b:better_fenced_code_block_update_timer)
   endif
   
-  if g:markdown_highlight_update_delay > 0
-    let b:markdown_update_timer = timer_start(g:markdown_highlight_update_delay, 
+  if g:better_fenced_code_block_update_delay > 0
+    let b:better_fenced_code_block_update_timer = timer_start(g:better_fenced_code_block_update_delay, 
           \ {-> better_fenced_code_block#do_apply_highlighting()})
   else
     call better_fenced_code_block#do_apply_highlighting()
@@ -133,7 +133,7 @@ function! better_fenced_code_block#do_apply_highlighting()
       let fence_match = ''
       let fence_pattern = ''
       
-      for pattern in g:markdown_highlight_fence_patterns
+      for pattern in g:better_fenced_code_block_fence_patterns
         let matches = matchlist(line, pattern)
         if !empty(matches) && !empty(matches[1])
           let fence_match = matches[1]
@@ -180,7 +180,7 @@ function! better_fenced_code_block#do_apply_highlighting()
         endif
         
         " Add line number based on configured method
-        if g:markdown_highlight_show_line_numbers
+        if g:better_fenced_code_block_show_line_numbers
           call s:place_line_number(line_num, relative_line)
         endif
       endif
@@ -213,17 +213,17 @@ endfunction
 
 " Debug output
 function! s:debug_message(msg)
-  if g:markdown_highlight_debug == 1
+  if g:better_fenced_code_block_debug == 1
     echom "[BFCB] " . a:msg
   endif
 endfunction
 
 " Place line number using configured method
 function! s:place_line_number(line_num, relative_line)
-  let line_number_text = substitute(g:markdown_highlight_line_number_format, '%d', a:relative_line, 'g')
+  let line_number_text = substitute(g:better_fenced_code_block_line_number_format, '%d', a:relative_line, 'g')
   
   " Determine method to use
-  let method = g:markdown_highlight_line_number_method
+  let method = g:better_fenced_code_block_line_number_method
   
   " If auto, select best available method
   if method == 'auto'
@@ -256,14 +256,14 @@ function! s:place_line_number_nvim(line_num, line_number_text)
   
   " Place the line number as virtual text right after the line number column
   call nvim_buf_set_virtual_text(0, b:mch_namespace_id, a:line_num-1, 
-        \ [[a:line_number_text, g:markdown_highlight_line_number_style]], {})
+        \ [[a:line_number_text, g:better_fenced_code_block_line_number_style]], {})
 endfunction
 
 " Place a line number using Vim's text properties
 function! s:place_line_number_vim(line_num, line_number_text)
   " Ensure we have our property type defined
   if !exists('s:prop_type_defined')
-    call prop_type_add('BFCB_LineNr', {'highlight': g:markdown_highlight_line_number_style})
+    call prop_type_add('BFCB_LineNr', {'highlight': g:better_fenced_code_block_line_number_style})
     let s:prop_type_defined = 1
   endif
   
@@ -288,7 +288,7 @@ function! s:place_line_number_sign(line_num, relative_line)
   
   " Define the sign if not already defined
   if !exists('s:defined_signs') || index(s:defined_signs, sign_name) == -1
-    execute 'sign define ' . sign_name . ' text=' . a:relative_line . ' texthl=' . g:markdown_highlight_line_number_style
+    execute 'sign define ' . sign_name . ' text=' . a:relative_line . ' texthl=' . g:better_fenced_code_block_line_number_style
     if !exists('s:defined_signs')
       let s:defined_signs = []
     endif
@@ -338,9 +338,9 @@ function! s:highlight_invalid_spec(fence_line, invalid_nums)
   
   " Apply error highlight style
   silent! highlight clear MarkdownCodeHighlightError
-  if g:markdown_highlight_error_style == 'red'
+  if g:better_fenced_code_block_error_style == 'red'
     highlight MarkdownCodeHighlightError ctermbg=red ctermfg=white guibg=#FF0000 guifg=#FFFFFF
-  elseif g:markdown_highlight_error_style == 'reverse'
+  elseif g:better_fenced_code_block_error_style == 'reverse'
     highlight MarkdownCodeHighlightError cterm=reverse,bold gui=reverse,bold
   else
     " Default fallback - DiffDelete is usually red in most colorschemes
@@ -348,8 +348,8 @@ function! s:highlight_invalid_spec(fence_line, invalid_nums)
   endif
   
   " Find all highlight specification parts
-  let keyword_pattern = '\<\(' . g:markdown_highlight_keyword
-  for alias in g:markdown_highlight_keyword_aliases
+  let keyword_pattern = '\<\(' . g:better_fenced_code_block_keyword
+  for alias in g:better_fenced_code_block_keyword_aliases
     let keyword_pattern .= '\|' . alias
   endfor
   let keyword_pattern .= '\)=\([''"]\?\)\([^''"]*\)\2'
@@ -361,8 +361,8 @@ function! s:highlight_invalid_spec(fence_line, invalid_nums)
     
     if start_idx != -1
       " Store match id for cleanup
-      if !exists('w:markdown_error_match_ids')
-        let w:markdown_error_match_ids = []
+      if !exists('w:better_fenced_code_block_error_match_ids')
+        let w:better_fenced_code_block_error_match_ids = []
       endif
       
       " Find specific parts to highlight
@@ -381,7 +381,7 @@ function! s:highlight_invalid_spec(fence_line, invalid_nums)
             let error_end = start_idx + pos[2]
             let match_id = matchadd('MarkdownCodeHighlightError', 
                   \ '\%' . a:fence_line . 'l\%>' . error_start . 'c\%<' . (error_end + 1) . 'c')
-            call add(w:markdown_error_match_ids, match_id)
+            call add(w:better_fenced_code_block_error_match_ids, match_id)
             call s:debug_message("Added error highlight for line " . a:fence_line . 
                   \ ", position " . error_start . "-" . error_end . " (invalid number: " . invalid_num . ")")
           endif
@@ -397,12 +397,12 @@ function! s:highlight_line(line_num)
   execute 'syntax match MarkdownCodeHighlight /\%' . a:line_num . 'l.*/'
   
   " 2. Use :match highlighting (helps with full-width display)
-  if !exists('w:markdown_match_ids') 
-    let w:markdown_match_ids = []
+  if !exists('w:better_fenced_code_block_match_ids') 
+    let w:better_fenced_code_block_match_ids = []
   endif
   
   let match_id = matchadd('MarkdownCodeHighlight', '\%' . a:line_num . 'l.*')
-  call add(w:markdown_match_ids, match_id)
+  call add(w:better_fenced_code_block_match_ids, match_id)
   
   " 3. Use 2match for additional coverage
   execute '2match MarkdownCodeHighlight /\%' . a:line_num . 'l.*/'
@@ -442,8 +442,8 @@ function! better_fenced_code_block#clear_highlights()
   silent! syntax clear MarkdownCodeHighlightError
   
   " Clear match highlights
-  if exists('w:markdown_match_ids') && type(w:markdown_match_ids) == v:t_list
-    for id in w:markdown_match_ids
+  if exists('w:better_fenced_code_block_match_ids') && type(w:better_fenced_code_block_match_ids) == v:t_list
+    for id in w:better_fenced_code_block_match_ids
       try
         call matchdelete(id)
       catch
@@ -451,11 +451,11 @@ function! better_fenced_code_block#clear_highlights()
       endtry
     endfor
   endif
-  let w:markdown_match_ids = []
+  let w:better_fenced_code_block_match_ids = []
   
   " Clear error highlights
-  if exists('w:markdown_error_match_ids') && type(w:markdown_error_match_ids) == v:t_list
-    for id in w:markdown_error_match_ids
+  if exists('w:better_fenced_code_block_error_match_ids') && type(w:better_fenced_code_block_error_match_ids) == v:t_list
+    for id in w:better_fenced_code_block_error_match_ids
       try
         call matchdelete(id)
       catch
@@ -463,13 +463,13 @@ function! better_fenced_code_block#clear_highlights()
       endtry
     endfor
   endif
-  let w:markdown_error_match_ids = []
+  let w:better_fenced_code_block_error_match_ids = []
   
   " Clear 2match
   2match none
   
   " Clear line numbers based on method
-  let method = g:markdown_highlight_line_number_method
+  let method = g:better_fenced_code_block_line_number_method
   
   " If auto, select best available method
   if method == 'auto'
@@ -497,9 +497,9 @@ function! better_fenced_code_block#setup_highlight_style()
   silent! highlight clear MarkdownCodeHighlight
   
   " Apply style based on configuration
-  if has_key(g:markdown_highlight_custom, g:markdown_highlight_style)
+  if has_key(g:better_fenced_code_block_custom, g:better_fenced_code_block_style)
     " Apply custom style definition
-    let custom = g:markdown_highlight_custom[g:markdown_highlight_style]
+    let custom = g:better_fenced_code_block_custom[g:better_fenced_code_block_style]
     let cmd = 'highlight MarkdownCodeHighlight'
     
     " Handle term/cterm attributes
@@ -525,25 +525,25 @@ function! better_fenced_code_block#setup_highlight_style()
     endif
     
     execute cmd
-  elseif g:markdown_highlight_style == 'green'
+  elseif g:better_fenced_code_block_style == 'green'
     highlight MarkdownCodeHighlight ctermbg=green ctermfg=black guibg=#00FF00 guifg=#000000
-  elseif g:markdown_highlight_style == 'blue'
+  elseif g:better_fenced_code_block_style == 'blue'
     highlight MarkdownCodeHighlight ctermbg=blue ctermfg=white guibg=#0000FF guifg=#FFFFFF
-  elseif g:markdown_highlight_style == 'yellow'
+  elseif g:better_fenced_code_block_style == 'yellow'
     highlight MarkdownCodeHighlight ctermbg=yellow ctermfg=black guibg=#FFFF00 guifg=#000000
-  elseif g:markdown_highlight_style == 'cyan'
+  elseif g:better_fenced_code_block_style == 'cyan'
     highlight MarkdownCodeHighlight ctermbg=cyan ctermfg=black guibg=#00FFFF guifg=#000000
-  elseif g:markdown_highlight_style == 'magenta'
+  elseif g:better_fenced_code_block_style == 'magenta'
     highlight MarkdownCodeHighlight ctermbg=magenta ctermfg=black guibg=#FF00FF guifg=#000000
-  elseif g:markdown_highlight_style == 'invert'
+  elseif g:better_fenced_code_block_style == 'invert'
     highlight MarkdownCodeHighlight cterm=reverse gui=reverse
-  elseif g:markdown_highlight_style == 'bold'
+  elseif g:better_fenced_code_block_style == 'bold'
     highlight MarkdownCodeHighlight cterm=bold gui=bold
-  elseif g:markdown_highlight_style == 'italic'
+  elseif g:better_fenced_code_block_style == 'italic'
     highlight MarkdownCodeHighlight cterm=italic gui=italic
-  elseif g:markdown_highlight_style == 'underline'
+  elseif g:better_fenced_code_block_style == 'underline'
     highlight MarkdownCodeHighlight cterm=underline gui=underline
-  elseif g:markdown_highlight_style == 'undercurl'
+  elseif g:better_fenced_code_block_style == 'undercurl'
     highlight MarkdownCodeHighlight cterm=undercurl gui=undercurl
   else
     " Default fallback - DiffAdd is usually green in most colorschemes
@@ -553,9 +553,9 @@ function! better_fenced_code_block#setup_highlight_style()
   " Setup error highlight style
   silent! highlight clear MarkdownCodeHighlightError
   
-  if g:markdown_highlight_error_style == 'red'
+  if g:better_fenced_code_block_error_style == 'red'
     highlight MarkdownCodeHighlightError ctermbg=red ctermfg=white guibg=#FF0000 guifg=#FFFFFF
-  elseif g:markdown_highlight_error_style == 'reverse'
+  elseif g:better_fenced_code_block_error_style == 'reverse'
     highlight MarkdownCodeHighlightError cterm=reverse,bold gui=reverse,bold
   else
     " Default fallback - DiffDelete is usually red in most colorschemes
@@ -565,14 +565,14 @@ endfunction
 
 " Function to toggle line numbers
 function! better_fenced_code_block#toggle_line_numbers()
-  let g:markdown_highlight_show_line_numbers = !g:markdown_highlight_show_line_numbers
+  let g:better_fenced_code_block_show_line_numbers = !g:better_fenced_code_block_show_line_numbers
   
   " Toggle line numbers
-  if g:markdown_highlight_show_line_numbers
+  if g:better_fenced_code_block_show_line_numbers
     set number
     
     " Only set signcolumn if using the sign method
-    let method = g:markdown_highlight_line_number_method
+    let method = g:better_fenced_code_block_line_number_method
     if method == 'auto' && !has('nvim-0.5') && !exists('*prop_type_add')
       set signcolumn=yes:1
     elseif method == 'sign'
@@ -580,7 +580,7 @@ function! better_fenced_code_block#toggle_line_numbers()
     endif
   else
     " Reset signcolumn if needed
-    let method = g:markdown_highlight_line_number_method
+    let method = g:better_fenced_code_block_line_number_method
     if method == 'auto' && !has('nvim-0.5') && !exists('*prop_type_add')
       set signcolumn=auto
     elseif method == 'sign'
@@ -589,19 +589,19 @@ function! better_fenced_code_block#toggle_line_numbers()
   endif
   
   call better_fenced_code_block#apply_highlighting()
-  echo "Line numbers " . (g:markdown_highlight_show_line_numbers ? "enabled" : "disabled")
+  echo "Line numbers " . (g:better_fenced_code_block_show_line_numbers ? "enabled" : "disabled")
 endfunction
 
 " Style-related functions
 function! better_fenced_code_block#complete_styles(ArgLead, CmdLine, CursorPos)
   let builtin_styles = ['green', 'yellow', 'cyan', 'blue', 'magenta', 'invert', 'bold', 'italic', 'underline', 'undercurl']
-  let custom_styles = keys(g:markdown_highlight_custom)
+  let custom_styles = keys(g:better_fenced_code_block_custom)
   let all_styles = builtin_styles + custom_styles
   return filter(all_styles, 'v:val =~ "^" . a:ArgLead')
 endfunction
 
 function! better_fenced_code_block#change_highlight_style(style)
-  let g:markdown_highlight_style = a:style
+  let g:better_fenced_code_block_style = a:style
   call better_fenced_code_block#setup_highlight_style()
   call better_fenced_code_block#apply_highlighting()
   echo "Highlight style changed to: " . a:style
@@ -609,7 +609,7 @@ endfunction
 
 function! better_fenced_code_block#register_custom_style(name, ...)
   if a:0 == 0
-    echoerr "MarkdownHighlightRegisterStyle requires at least one attribute!"
+    echoerr "BetterFencedCodeBlockRegisterStyle requires at least one attribute!"
     return
   endif
   
@@ -630,7 +630,7 @@ function! better_fenced_code_block#register_custom_style(name, ...)
     let i += 1
   endwhile
   
-  let g:markdown_highlight_custom[a:name] = custom
+  let g:better_fenced_code_block_custom[a:name] = custom
   echo "Registered custom style: " . a:name
 endfunction
 
