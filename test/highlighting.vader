@@ -1,0 +1,47 @@
+" Tests for line highlight parsing
+Execute (Test parsing of highlight attribute with commas):
+  let result = fenced_code_block#parse_highlight_attribute('1,3,5')
+  AssertEqual [1, 3, 5], result
+
+Execute (Test parsing of highlight attribute with ranges):
+  let result = fenced_code_block#parse_highlight_attribute('1-3')
+  AssertEqual [1, 2, 3], result
+
+Execute (Test parsing of highlight attribute with mixed format):
+  let result = fenced_code_block#parse_highlight_attribute('1-3,5,7-9')
+  AssertEqual [1, 2, 3, 5, 7, 8, 9], result
+
+Execute (Test parsing of highlight attribute with colons):
+  let result = fenced_code_block#parse_highlight_attribute('1-3:5')
+  AssertEqual [1, 2, 3, 5], result
+
+" Tests for code block highlighting
+Given markdown (Code block with highlighted lines):
+  ```python highlight="2,4-5"
+  def greet(name):
+    print(f"Hello, {name}!")
+  
+  def farewell(name):
+    print(f"Goodbye, {name}!")
+  ```
+
+Do (Test syntax highlighting is applied):
+  " Position cursor inside code block and check syntax highlighting
+  normal! 3G
+  AssertEqual 'markdownCode', synIDattr(synID(line('.'), col('.'), 1), 'name')
+  
+  " Check that line 2 has special highlight
+  normal! 2G
+  let highlightGroups = fenced_code_block#get_highlight_groups_at_cursor()
+  Assert index(highlightGroups, 'FencedCodeHighlight') >= 0
+
+" Tests for fence detection
+Execute (Test fence pattern matching triple backticks):
+  let line = '```python'
+  let match = matchlist(line, g:fenced_code_block_fence_patterns[0])
+  AssertEqual '```', match[1]
+
+Execute (Test fence pattern matching triple tildes):
+  let line = '~~~javascript'
+  let match = matchlist(line, g:fenced_code_block_fence_patterns[1])
+  AssertEqual '~~~', match[1] 

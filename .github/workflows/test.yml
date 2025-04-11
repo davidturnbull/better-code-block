@@ -1,0 +1,39 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Run Vader tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: fenced-code-block
+
+      - name: Install Vim
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y vim
+
+      - name: Clone Vader
+        run: |
+          git clone https://github.com/junegunn/vader.vim.git
+
+      - name: Run tests
+        run: |
+          cd fenced-code-block
+          vim -Nu <(cat << EOF
+          set nocompatible
+          filetype off
+          set rtp+=../vader.vim
+          set rtp+=.
+          set rtp+=after
+          filetype plugin indent on
+          syntax enable
+          EOF) -c 'Vader! test/**/*.vader' > /dev/null

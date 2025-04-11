@@ -1,0 +1,32 @@
+" Minimal configuration for testing
+set nocompatible
+filetype off
+
+" Assume vader.vim is in the parent directory
+set rtp+=../vader.vim
+
+" Add plugin to runtime path
+set rtp+=..
+set rtp+=../after
+
+" Enable plugin functionality
+filetype plugin indent on
+syntax enable
+
+" Disable swapfiles for tests
+set noswapfile
+
+" Store temporary files in /tmp
+set backupdir=/tmp//
+set directory=/tmp//
+
+" Some settings to make testing easier
+set hidden
+set nobackup
+set nowritebackup
+set updatetime=300
+set shortmess+=c
+
+" Set plugin variables for testing if needed
+" let g:fenced_code_block_debug = 1
+" let g:fenced_code_block_style = 'green'
