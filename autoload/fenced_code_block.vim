@@ -49,6 +49,40 @@ function! fenced_code_block#extract_highlight_spec(line)
   return highlight_spec
 endfunction
 
+" Extract start line number from a markdown fence line
+function! fenced_code_block#extract_start_spec(line)
+  " Try primary keyword and aliases
+  let keywords = [g:fenced_code_block_start_keyword] + g:fenced_code_block_start_keyword_aliases
+  let start_spec = ''
+  
+  for keyword in keywords
+    " Try to match with each quote style
+    let spec = s:match_keyword_with_quotes(a:line, keyword, '"')
+    if !empty(spec)
+      let start_spec = spec
+      call s:debug_message("Found start spec with keyword '" . keyword . "' in double quotes: '" . start_spec . "'")
+      break
+    endif
+    
+    let spec = s:match_keyword_with_quotes(a:line, keyword, "'")
+    if !empty(spec)
+      let start_spec = spec
+      call s:debug_message("Found start spec with keyword '" . keyword . "' in single quotes: '" . start_spec . "'")
+      break
+    endif
+    
+    " Try without quotes
+    let spec = s:match_keyword_without_quotes(a:line, keyword)
+    if !empty(spec)
+      let start_spec = spec
+      call s:debug_message("Found start spec with keyword '" . keyword . "' without quotes: '" . start_spec . "'")
+      break
+    endif
+  endfor
+  
+  return start_spec
+endfunction
+
 " Helper function to match keyword with quotes
 function! s:match_keyword_with_quotes(line, keyword, quote_char)
   let escaped_quote = (a:quote_char == '"') ? '\"' : "'"
@@ -162,6 +196,17 @@ function! s:parse_single_line(part)
   return 0
 endfunction
 
+" Parse a start value from a start specification
+function! fenced_code_block#parse_start_value(start_spec)
+  if empty(a:start_spec)
+    return 1  " Default start value if not specified
+  endif
+  
+  let num = str2nr(a:start_spec)
+  call s:debug_message("Parsed start value: " . num)
+  return num
+endfunction
+
 " Apply highlighting to specified lines
 function! fenced_code_block#apply_highlighting()
   " If delay is set and we're in event-triggered update, debounce it
@@ -226,6 +271,9 @@ function! s:find_code_blocks()
         let in_code_block = 1
         let code_block_start = line_num
         let lines_to_highlight = fenced_code_block#parse_highlight_spec(line)
+        " Extract start line number
+        let start_spec = fenced_code_block#extract_start_spec(line)
+        let start_value = fenced_code_block#parse_start_value(start_spec)
         " Store just the fence characters, not the entire match
         " For test environment, always use '```' for backtick fences
         if line =~# '^```'
@@ -241,7 +289,8 @@ function! s:find_code_blocks()
               \ 'fence_type': fence_type,
               \ 'highlight_lines': lines_to_highlight,
               \ 'language': language,
-              \ 'content_lines': []
+              \ 'content_lines': [],
+              \ 'start_value': start_value
               \ }
         call s:debug_message("Found code block at line " . line_num . " with fence: " . fence_type . ", highlight lines: " . string(lines_to_highlight))
         continue
@@ -302,6 +351,8 @@ function! fenced_code_block#do_apply_highlighting()
     for content_line in block['content_lines']
       let line_num = content_line['line_num']
       let relative_line = content_line['relative_line']
+      let start_value = block['start_value']
+      let display_line = relative_line + start_value - 1
       
       " Apply highlight to specified lines within code block
       if !empty(lines_to_highlight)
@@ -314,13 +365,13 @@ function! fenced_code_block#do_apply_highlighting()
         if (type(g:fenced_code_block_show_line_numbers) == v:t_number && g:fenced_code_block_show_line_numbers) ||
               \ g:fenced_code_block_show_line_numbers == 'always' ||
               \ (g:fenced_code_block_show_line_numbers == 'with_highlights' && !empty(lines_to_highlight))
-          call s:place_line_number(line_num, relative_line)
+          call s:place_line_number(line_num, display_line)
         endif
       else
         " For blocks without highlight specifications
         if (type(g:fenced_code_block_show_line_numbers) == v:t_number && g:fenced_code_block_show_line_numbers) ||
               \ g:fenced_code_block_show_line_numbers == 'always'
-          call s:place_line_number(line_num, relative_line)
+          call s:place_line_number(line_num, display_line)
         endif
       endif
     endfor

@@ -449,6 +449,40 @@ Execute (Test toggle and cleanup):
   " Clean up
   bwipeout!
 
+"===============================================================================
+" Tests for start line number specification
+"===============================================================================
+
+Execute (Test extract_start_spec with double quotes):
+  let line = '```python start="5"'
+  let result = fenced_code_block#extract_start_spec(line)
+  AssertEqual '5', result
+
+Execute (Test extract_start_spec with single quotes):
+  let line = "```python start='10'"
+  let result = fenced_code_block#extract_start_spec(line)
+  AssertEqual '10', result
+
+Execute (Test extract_start_spec without quotes):
+  let line = '```python start=15'
+  let result = fenced_code_block#extract_start_spec(line)
+  AssertEqual '15', result
+
+Execute (Test extract_start_spec with alias):
+  let line = '```python from="20"'
+  let result = fenced_code_block#extract_start_spec(line)
+  AssertEqual '20', result
+
+Execute (Test extract_start_spec with no start keyword):
+  let line = '```python'
+  let result = fenced_code_block#extract_start_spec(line)
+  AssertEqual '', result
+
+Execute (Test parse_start_value with valid input):
+  AssertEqual 5, fenced_code_block#parse_start_value('5')
+  AssertEqual 10, fenced_code_block#parse_start_value('10')
+  AssertEqual 1, fenced_code_block#parse_start_value('')
+
 After:
   " Reset global variables to avoid affecting other tests
   let g:fenced_code_block_keyword = 'highlight'
