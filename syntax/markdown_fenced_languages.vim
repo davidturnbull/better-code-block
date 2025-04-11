@@ -29,7 +29,8 @@ let s:supported_languages = {
   \ 'sql': 'sql',
   \ 'xml': 'xml',
   \ 'markdown': 'markdown',
-  \ 'md': 'markdown'
+  \ 'md': 'markdown',
+  \ 'mdx': 'markdown'
   \ }
 
 " Load syntax for a specific language

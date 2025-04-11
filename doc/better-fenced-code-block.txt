@@ -24,6 +24,7 @@ Key features:
 - Multiple highlighting styles (colors, bold, italic, etc.)
 - Line numbering within code blocks
 - Configurable options for appearance and behavior
+- Recognizes common language identifiers (like `python`, `js`, `mdx`, etc.)
 
 ===============================================================================
 2. USAGE                                          *better-fenced-code-block-usage*

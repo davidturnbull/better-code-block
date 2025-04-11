@@ -11,6 +11,7 @@ Enhances syntax highlighting within fenced code blocks in Markdown (and other su
 - **Multiple Keywords:** Use `highlight=`, `hl=`, `mark=`, or `emphasize=` to trigger highlighting.
 - **Configurable:** Adjust filetypes, highlight styles, line number display, and more.
 - **Multiple Fence Styles:** Supports `````and`~~~`fences by default, configurable via`g:better_fenced_code_block_fence_patterns`.
+- **Supports Common Language Identifiers:** Recognizes many common language identifiers (like `python`, `javascript`, `ruby`, `bash`, `markdown`, `mdx`, etc.) for syntax highlighting within the blocks.
 
 ## Installation
 
