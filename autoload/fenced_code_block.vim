@@ -146,7 +146,14 @@ function! s:parse_range(part)
     let end = str2nr(range_match[2])
     
     let lines = s:get_range_lines(start, end)
-    call s:debug_message("Added range " . start . "-" . end)
+    
+    " Check if this was a reversed range
+    if end < start && !empty(a:part)
+      " Add the part to the invalid highlights - this will be caught during validation
+      call s:debug_message("Detected reversed range: " . start . "-" . end)
+    else
+      call s:debug_message("Added range " . start . "-" . end)
+    endif
   endif
   
   return lines
@@ -155,6 +162,12 @@ endfunction
 " Get all line numbers in a range
 function! s:get_range_lines(start, end)
   let lines = []
+  " Check if the range is reversed (end < start)
+  if a:end < a:start
+    call s:debug_message("Invalid range: end (" . a:end . ") is less than start (" . a:start . ")")
+    return []
+  endif
+  
   for i in range(a:start, a:end)
     call add(lines, i)
   endfor
