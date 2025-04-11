@@ -28,6 +28,9 @@ jobs:
       - name: Run tests
         run: |
           cd fenced-code-block
+          # Create a script to run tests and capture exit code
+          cat > run_test.sh << 'SCRIPT'
+          #!/bin/bash
           vim -Nu <(cat << EOF
           set nocompatible
           filetype off
@@ -36,4 +39,8 @@ jobs:
           set rtp+=after
           filetype plugin indent on
           syntax enable
-          EOF) -c 'Vader! test/**/*.vader' || exit $?
+          EOF) -c 'Vader! test/**/*.vader'
+          exit $?
+          SCRIPT
+          chmod +x run_test.sh
+          ./run_test.sh
