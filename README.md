@@ -8,6 +8,7 @@ Enhances syntax highlighting within fenced code blocks in Markdown (and other su
 - **Flexible Syntax:** Supports single lines (`5`), multiple lines (`1,3,5`), ranges (`1-3`), and combinations (`1-3,5,8-10`).
 - **Customizable Appearance:** Choose from pre-defined highlight styles (colors, bold, italic, etc.) or define your own.
 - **Relative Line Numbering:** Optionally display relative line numbers within the code blocks.
+- **Custom Line Number Start:** Define a custom starting value for line numbers with `start=10` attribute.
 - **Multiple Keywords:** Use `highlight=`, `hl=`, `mark=`, or `emphasize=` to trigger highlighting.
 - **Configurable:** Adjust filetypes, highlight styles, line number display, and more.
 - **Multiple Fence Styles:** Supports `````and`~~~`fences by default, configurable via`g:fenced_code_block_fence_patterns`.
@@ -81,6 +82,8 @@ Configure the plugin by setting the following global variables in your `vimrc` o
 | `g:fenced_code_block_extensions`         | `['md', 'markdown', 'txt']`       | List of file extensions where the plugin should be active.                                                                                  |
 | `g:fenced_code_block_keyword`            | `'highlight'`                     | The primary keyword to look for in the fence line.                                                                                          |
 | `g:fenced_code_block_keyword_aliases`    | `['hl', 'mark', 'emphasize']`     | Alternative keywords that trigger highlighting.                                                                                             |
+| `g:fenced_code_block_start_keyword`      | `'start'`                         | The primary keyword for setting the starting line number.                                                                                   |
+| `g:fenced_code_block_start_keyword_aliases` | `['from', 'begin']`            | Alternative keywords for setting the starting line number.                                                                                  |
 | `g:fenced_code_block_show_line_numbers`  | `1`                               | Controls relative line numbers in code blocks. Values: `1` or `'always'` (always show), `0` or `'never'` (never show), `'with_highlights'` (only show with highlights).                         |
 | `g:fenced_code_block_line_number_method` | `'auto'`                          | Method for displaying line numbers: `'nvim'` (virtual text), `'prop'` (text properties), `'sign'` (sign column), `'auto'` (best available). |
 | `g:fenced_code_block_line_number_format` | `' %d '`                          | Format string for line numbers (`%d` is the line number).                                                                                   |

@@ -41,6 +41,16 @@ if !exists('g:fenced_code_block_keyword_aliases')
   let g:fenced_code_block_keyword_aliases = ['hl', 'mark', 'emphasize']
 endif
 
+" Line number start keyword
+if !exists('g:fenced_code_block_start_keyword')
+  let g:fenced_code_block_start_keyword = 'start'
+endif
+
+" Alias keywords for start
+if !exists('g:fenced_code_block_start_keyword_aliases')
+  let g:fenced_code_block_start_keyword_aliases = ['from', 'begin']
+endif
+
 " Enable/disable relative line numbers in code blocks
 " Values: 1 or 'always' (always show), 0 or 'never' (never show), 'with_highlights' (only with highlights)
 if !exists('g:fenced_code_block_show_line_numbers')

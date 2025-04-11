@@ -58,9 +58,14 @@ The highlight attribute supports multiple formats:
 - Mixed: highlight="1-3,5,7-9"
 - Alternative syntax with colon: highlight="1-3:5" (highlights lines 1-3 and 5)
 
+Line numbering can start from a different value using the start attribute:
+- Start from line 5: start="5"
+- Example: ```python highlight="1-3" start="5" (highlights lines 1-3, numbering starts at 5)
+
 Alternative keywords:
 - You can also use "hl", "mark", or "emphasize" instead of "highlight"
-- Example: ```python hl="1-3"
+- You can also use "from" or "begin" instead of "start"
+- Example: ```python hl="1-3" from="10"
 
 ===============================================================================
 3. CONFIGURATION                                *fenced-code-block-config*
@@ -82,8 +87,16 @@ You can configure the plugin behavior with the following variables:
 *g:fenced_code_block_keyword*      Primary highlight keyword (default: 'highlight')
 
 *g:fenced_code_block_keyword_aliases* 
-                                  Alternative keywords
-                                  Default: ['hl', 'mark', 'emphasize']
+                                   Alternative keywords
+                                   Default: ['hl', 'mark', 'emphasize']
+
+*g:fenced_code_block_start_keyword*
+                                   Primary keyword for start line number 
+                                   Default: 'start'
+
+*g:fenced_code_block_start_keyword_aliases*
+                                   Alternative keywords for start line number
+                                   Default: ['from', 'begin']
 
 *g:fenced_code_block_show_line_numbers*
                                   Controls line number display:
@@ -159,4 +172,4 @@ You can define your own mapping:
 
 This plugin uses the same license as Vim itself.
 
- vim:tw=78:ts=8:ft=help:norl:    
+ vim:tw=78:ts=8:ft=help:norl:                
