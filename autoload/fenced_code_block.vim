@@ -112,11 +112,7 @@ endfunction
 function! fenced_code_block#parse_highlight_attribute(highlight_spec)
   let lines_to_highlight = []
   
-  " Check for colon format (e.g., "1-2:5")
-  let colon_lines = s:parse_colon_format(a:highlight_spec)
-  if !empty(colon_lines)
-    return colon_lines
-  endif
+
   
   " Process comma-separated parts
   for part in split(a:highlight_spec, ',')
@@ -138,28 +134,7 @@ function! fenced_code_block#parse_highlight_attribute(highlight_spec)
   return lines_to_highlight
 endfunction
 
-" Parse the colon format like "1-2:5" into an array of line numbers
-function! s:parse_colon_format(spec)
-  let lines = []
-  
-  let colon_match = matchlist(a:spec, '\(\d\+\)\s*-\s*\(\d\+\)\s*:\s*\(\d\+\)')
-  if !empty(colon_match)
-    let start = str2nr(colon_match[1])
-    let end = str2nr(colon_match[2])
-    let single = str2nr(colon_match[3])
-    
-    " Add range
-    let range_lines = s:get_range_lines(start, end)
-    call extend(lines, range_lines)
-    
-    " Add single line
-    call add(lines, single)
-    
-    call s:debug_message("Parsed colon format - lines: " . string(lines))
-  endif
-  
-  return lines
-endfunction
+
 
 " Parse a range like "1-3" into an array of line numbers
 function! s:parse_range(part)

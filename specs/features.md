@@ -24,7 +24,7 @@ Where `line-spec` can be:
 - **Multiple lines**: `highlight="1,3,5"` - Highlights lines 1, 3, and 5
 - **Line range**: `highlight="1-3"` - Highlights lines 1 through 3 (inclusive)
 - **Mixed format**: `highlight="1-3,5,7-9"` - Combines ranges and individual lines
-- **Colon separator**: `highlight="1-3:5"` - Alternative syntax (equivalent to `1-3,5`)
+
 
 #### Keyword Aliases
 

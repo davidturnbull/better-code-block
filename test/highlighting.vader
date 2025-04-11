@@ -62,10 +62,7 @@ Execute (Test parse_highlight_attribute with mixed values):
   let result = fenced_code_block#parse_highlight_attribute(spec)
   AssertEqual [1, 2, 4, 6, 7, 8], result
 
-Execute (Test parse_highlight_attribute with colon format):
-  let spec = '1-3:5'
-  let result = fenced_code_block#parse_highlight_attribute(spec)
-  AssertEqual [1, 2, 3, 5], result
+
 
 Execute (Test parse_highlight_attribute with spaces):
   let spec = '1 - 3, 5'
@@ -185,7 +182,7 @@ Execute (Test find_code_blocks function):
 Execute (Test parse_highlight_spec with different formats):
   AssertEqual [1, 3], fenced_code_block#parse_highlight_spec('```python highlight="1,3"')
   AssertEqual [1, 2, 3], fenced_code_block#parse_highlight_spec('```python highlight="1-3"')
-  AssertEqual [1, 2, 3, 5], fenced_code_block#parse_highlight_spec('```python highlight="1-3:5"')
+
   AssertEqual [], fenced_code_block#parse_highlight_spec('```python')
 
 "===============================================================================

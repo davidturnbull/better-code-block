@@ -68,7 +68,7 @@ This will apply the configured highlight style to line 2 and lines 4 through 5 o
 - Multiple lines: `highlight="1,3,5"`
 - Line ranges: `highlight="1-3"`
 - Mixed: `highlight="1-3,5,7-9"`
-- Colon as separator: `highlight="1-3:5"` (equivalent to `1-3,5`)
+
 
 ## Configuration
 
