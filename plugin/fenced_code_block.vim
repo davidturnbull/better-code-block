@@ -74,8 +74,8 @@ endif
 " Custom fence patterns (must contain at least one capture group for the fence characters)
 if !exists('g:fenced_code_block_fence_patterns')
   let g:fenced_code_block_fence_patterns = [
-        \ '^\(`\{3,}\)',
-        \ '^\(\~\{3,}\)'
+        \ '^\(`\{3,}\).*$',
+        \ '^\([\~]\{3,}\).*$'
         \ ]
 endif
 

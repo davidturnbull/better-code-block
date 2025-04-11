@@ -28,7 +28,12 @@ jobs:
       - name: Run tests
         run: |
           cd fenced-code-block
-          vim -Nu <(cat << EOF
+          # Create a script to run tests with headless Vim
+          cat > run_test.sh << 'SCRIPT'
+          #!/bin/bash
+          set -e
+          # Run Vim with Vader tests in headless mode with timeout
+          timeout 60s vim -es -Nu <(cat << EOF
           set nocompatible
           filetype off
           set rtp+=../vader.vim
@@ -36,4 +41,10 @@ jobs:
           set rtp+=after
           filetype plugin indent on
           syntax enable
-          EOF) -c 'Vader! test/**/*.vader' > /dev/null
+          EOF) -c 'Vader! test/**/*.vader' -c 'qall!'
+          exit_code=$?
+          echo "Vim exited with code: $exit_code"
+          exit $exit_code
+          SCRIPT
+          chmod +x run_test.sh
+          ./run_test.sh

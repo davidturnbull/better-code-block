@@ -5,13 +5,13 @@ Before:
   " Set up test configuration
   let g:fenced_code_block_keyword = 'highlight'
   let g:fenced_code_block_keyword_aliases = ['hl', 'hi']
-  let g:fenced_code_block_fence_patterns = ['^```\(.*\)$', '^~~~\(.*\)$']
+  let g:fenced_code_block_fence_patterns = ['^```\(.*\)$', '^[\~]\{3,}\(.*\)$']
   let g:fenced_code_block_style = 'green'
   let g:fenced_code_block_error_style = 'red'
   let g:fenced_code_block_show_line_numbers = 0
   let g:fenced_code_block_line_number_method = 'auto'
   let g:fenced_code_block_update_delay = 0
-  let g:fenced_code_block_debug = 0
+  let g:fenced_code_block_debug = 1
   let g:fenced_code_block_custom = {}
 
 "===============================================================================
@@ -156,6 +156,12 @@ Execute (Test find_code_blocks function):
   " Get code blocks from the wrapper function
   " Check a few key properties of the blocks
   let blocks = fenced_code_block#test_find_code_blocks()
+  
+  " Debug output
+  echom "Found " . len(blocks) . " code blocks"
+  for i in range(len(blocks))
+    echom "Block " . i . ": " . string(blocks[i])
+  endfor
   
   " Basic validation - we should have 2 blocks
   Assert len(blocks) == 2, 'Expected 2 code blocks, found ' . len(blocks)
@@ -443,7 +449,7 @@ After:
   " Reset global variables to avoid affecting other tests
   let g:fenced_code_block_keyword = 'highlight'
   let g:fenced_code_block_keyword_aliases = ['hl', 'hi']
-  let g:fenced_code_block_fence_patterns = ['^```\(.*\)$', '^~~~\(.*\)$']
+  let g:fenced_code_block_fence_patterns = ['^```\(.*\)$', '^[\~]\{3,}\(.*\)$']
   let g:fenced_code_block_style = 'green'
   let g:fenced_code_block_error_style = 'red'
   let g:fenced_code_block_show_line_numbers = 0
