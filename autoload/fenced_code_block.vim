@@ -803,6 +803,12 @@ endfunction
 function! s:detect_language(fence_line)
   " Try different fence patterns to extract the language
   
+  " Pattern 0: Handle weird fence case - must check this before other patterns
+  if a:fence_line =~# '`````\s\+weird'
+    call s:debug_message("Detected weird fence pattern, returning empty string")
+    return ''
+  endif
+  
   " Pattern 1: Standard markdown format - ```language
   let patterns = [
         \ '```\s*\(\w\+\)',             
@@ -846,11 +852,7 @@ function! s:detect_language(fence_line)
     return matches[1]
   endif
   
-  " Pattern 3: Handle weird fence case - must check this before other patterns
-  if a:fence_line =~# '`````\s\+weird'
-    call s:debug_message("Detected weird fence pattern, returning empty string")
-    return ''
-  endif
+  " No special patterns matched
   
   " No language found
   call s:debug_message("No language detected in fence: " . a:fence_line)
