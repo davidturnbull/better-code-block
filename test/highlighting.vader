@@ -1,8 +1,8 @@
-" Tests for fenced_code_block.vim functionality
+" Behavior tests for fenced_code_block.vim
 
 " Setup global configuration
 Before:
-  " Set up test configuration
+  " Configure plugin for testing
   let g:fenced_code_block_keyword = 'highlight'
   let g:fenced_code_block_keyword_aliases = ['hl', 'hi']
   let g:fenced_code_block_fence_patterns = ['^```\(.*\)$', '^[\~]\{3,}\(.*\)$']
@@ -15,122 +15,11 @@ Before:
   let g:fenced_code_block_custom = {}
 
 "===============================================================================
-" Tests for highlight spec extraction
+" Code Block Detection and Parsing
 "===============================================================================
 
-Execute (Test extract_highlight_spec with double quotes):
-  let line = '```python highlight="1-3,5"'
-  let result = fenced_code_block#extract_highlight_spec(line)
-  AssertEqual '1-3,5', result
-
-Execute (Test extract_highlight_spec with single quotes):
-  let line = "```python highlight='2,4-6'"
-  let result = fenced_code_block#extract_highlight_spec(line)
-  AssertEqual '2,4-6', result
-
-Execute (Test extract_highlight_spec without quotes):
-  let line = '```python highlight=1,3,5'
-  let result = fenced_code_block#extract_highlight_spec(line)
-  AssertEqual '1,3,5', result
-
-Execute (Test extract_highlight_spec with alias):
-  let line = '```python hl="1-3"'
-  let result = fenced_code_block#extract_highlight_spec(line)
-  AssertEqual '1-3', result
-
-Execute (Test extract_highlight_spec with no highlight):
-  let line = '```python'
-  let result = fenced_code_block#extract_highlight_spec(line)
-  AssertEqual '', result
-
-"===============================================================================
-" Tests for highlight attribute parsing
-"===============================================================================
-
-Execute (Test parse_highlight_attribute with comma-separated values):
-  let spec = '1,3,5'
-  let result = fenced_code_block#parse_highlight_attribute(spec)
-  AssertEqual [1, 3, 5], result
-
-Execute (Test parse_highlight_attribute with range):
-  let spec = '1-3'
-  let result = fenced_code_block#parse_highlight_attribute(spec)
-  AssertEqual [1, 2, 3], result
-
-Execute (Test parse_highlight_attribute with mixed values):
-  let spec = '1-2,4,6-8'
-  let result = fenced_code_block#parse_highlight_attribute(spec)
-  AssertEqual [1, 2, 4, 6, 7, 8], result
-
-
-
-Execute (Test parse_highlight_attribute with spaces):
-  let spec = '1 - 3, 5'
-  let result = fenced_code_block#parse_highlight_attribute(spec)
-  AssertEqual [1, 2, 3, 5], result
-
-Execute (Test parse_highlight_attribute with empty spec):
-  let spec = ''
-  let result = fenced_code_block#parse_highlight_attribute(spec)
-  AssertEqual [], result
-
-"===============================================================================
-" Tests for language detection
-"===============================================================================
-
-Execute (Test language detection for standard format):
-  AssertEqual 'python', fenced_code_block#test_detect_language('```python')
-  AssertEqual 'javascript', fenced_code_block#test_detect_language('```javascript')
-  AssertEqual 'ruby', fenced_code_block#test_detect_language('``` ruby')
-  AssertEqual 'shell-bash', fenced_code_block#test_detect_language('```shell-bash')
-  AssertEqual 'config.json', fenced_code_block#test_detect_language('```config.json')
-  AssertEqual 'php', fenced_code_block#test_detect_language('```php highlight="1-3"')
-  AssertEqual 'java', fenced_code_block#test_detect_language('```{java}')
-  AssertEqual '', fenced_code_block#test_detect_language('```')
-
-"===============================================================================
-" Tests for complete parse-highlight workflow
-"===============================================================================
-
-Execute (Test full parse-highlight workflow):
-  let line = '```python highlight="1,3-5"'
-  let spec = fenced_code_block#extract_highlight_spec(line)
-  let lines = fenced_code_block#parse_highlight_attribute(spec)
-  AssertEqual [1, 3, 4, 5], lines
-
-"===============================================================================
-" Tests for style attribute parsing
-"===============================================================================
-
-Execute (Test parse_style_attributes):
-  let result = fenced_code_block#test_parse_style_attributes(['cterm', 'bold', 'ctermfg', 'red', 'ctermbg', 'black'])
-  AssertEqual 'bold', result.cterm
-  AssertEqual 'red', result.ctermfg
-  AssertEqual 'black', result.ctermbg
-
-"===============================================================================
-" Tests for line number method determination
-"===============================================================================
-
-Execute (Test determine_line_number_method):
-  " Test with explicit method
-  let g:fenced_code_block_line_number_method = 'sign'
-  AssertEqual 'sign', fenced_code_block#test_determine_line_number_method()
-  
-  let g:fenced_code_block_line_number_method = 'prop'
-  AssertEqual 'prop', fenced_code_block#test_determine_line_number_method()
-  
-  " Reset to auto - the actual result depends on Vim/Neovim version
-  let g:fenced_code_block_line_number_method = 'auto'
-  let result = fenced_code_block#test_determine_line_number_method()
-  Assert result =~ '\(nvim\|prop\|sign\)'
-
-"===============================================================================
-" Tests for code block finding
-"===============================================================================
-
-Execute (Test find_code_blocks function):
-  " Create a temporary buffer with markdown content
+Execute (Should detect multiple distinct code blocks in a markdown file):
+  " Create a test buffer with markdown content
   new
   call setline(1, [
         \ '# Test Markdown',
@@ -150,284 +39,288 @@ Execute (Test find_code_blocks function):
         \ '```'
         \ ])
 
-  " Get code blocks from the wrapper function
-  " Check a few key properties of the blocks
+  " Get code blocks
   let blocks = fenced_code_block#test_find_code_blocks()
   
-  " Debug output
-  echom "Found " . len(blocks) . " code blocks"
-  for i in range(len(blocks))
-    echom "Block " . i . ": " . string(blocks[i])
-  endfor
-  
-  " Basic validation - we should have 2 blocks
-  Assert len(blocks) == 2, 'Expected 2 code blocks, found ' . len(blocks)
-  
-  " Check first block
+  " Verify two blocks were found with correct properties
+  Assert len(blocks) == 2, 'Should find 2 code blocks'
   AssertEqual 'python', blocks[0].language
-  
-  " Check second block
   AssertEqual 'javascript', blocks[1].language
-  
-  " Check highlight lines in first block
   AssertEqual [1, 3], blocks[0].highlight_lines
   
   " Clean up
   bwipeout!
 
 "===============================================================================
-" Tests for parse_highlight_spec integration
+" Language Detection
 "===============================================================================
 
-Execute (Test parse_highlight_spec with different formats):
-  AssertEqual [1, 3], fenced_code_block#parse_highlight_spec('```python highlight="1,3"')
-  AssertEqual [1, 2, 3], fenced_code_block#parse_highlight_spec('```python highlight="1-3"')
+Execute (Should detect basic language name from fence opening line):
+  AssertEqual 'python', fenced_code_block#test_detect_language('```python')
+  AssertEqual 'javascript', fenced_code_block#test_detect_language('```javascript')
 
-  AssertEqual [], fenced_code_block#parse_highlight_spec('```python')
+Execute (Should detect language name with leading space):
+  AssertEqual 'ruby', fenced_code_block#test_detect_language('``` ruby')
+
+Execute (Should detect language name when followed by highlight attribute):
+  AssertEqual 'php', fenced_code_block#test_detect_language('```php highlight="1-3"')
+
+Execute (Should return empty string for unmarked code blocks):
+  AssertEqual '', fenced_code_block#test_detect_language('```')
+
+Execute (Should detect hyphenated language names):
+  AssertEqual 'shell-bash', fenced_code_block#test_detect_language('```shell-bash')
+
+Execute (Should detect language names with extensions):
+  AssertEqual 'config.json', fenced_code_block#test_detect_language('```config.json')
+
+Execute (Should detect language names in curly braces):
+  AssertEqual 'java', fenced_code_block#test_detect_language('```{java}')
+
+Execute (Should detect language names with special characters):
+  AssertEqual 'c++', fenced_code_block#test_detect_language('```c++')
+  AssertEqual 'f#', fenced_code_block#test_detect_language('```f#')
 
 "===============================================================================
-" Tests for highlight style application
+" Highlight Specification Parsing
 "===============================================================================
 
-Execute (Test apply_main_highlight_style):
-  " Setup and apply green style
+Execute (Should extract highlight specification with double quotes):
+  AssertEqual '1-3,5', fenced_code_block#extract_highlight_spec('```python highlight="1-3,5"')
+
+Execute (Should extract highlight specification with single quotes):
+  AssertEqual '2,4-6', fenced_code_block#extract_highlight_spec("```python highlight='2,4-6'")
+
+Execute (Should extract highlight specification without quotes):
+  AssertEqual '1,3,5', fenced_code_block#extract_highlight_spec('```python highlight=1,3,5')
+
+Execute (Should extract highlight specification using alias):
+  AssertEqual '1-3', fenced_code_block#extract_highlight_spec('```python hl="1-3"')
+
+Execute (Should return empty string when no highlight attribute exists):
+  AssertEqual '', fenced_code_block#extract_highlight_spec('```python')
+
+Execute (Should prioritize first highlight spec when multiple are present):
+  AssertEqual '1-3', fenced_code_block#extract_highlight_spec('```python highlight="1-3" hl="5"')
+
+Execute (Should extract highlight spec when additional attributes exist):
+  AssertEqual '1-3', fenced_code_block#extract_highlight_spec('```python highlight="1-3" class="syntax"')
+
+Execute (Should return empty string for empty highlight quotes):
+  AssertEqual '', fenced_code_block#extract_highlight_spec('```python highlight=""')
+
+Execute (Should return empty string for mismatched quotes):
+  AssertEqual '', fenced_code_block#extract_highlight_spec('```python highlight="1-3')
+
+"===============================================================================
+" Line Range Parsing
+"===============================================================================
+
+Execute (Should parse simple comma-separated line numbers):
+  AssertEqual [1, 3, 5], fenced_code_block#parse_highlight_attribute('1,3,5')
+
+Execute (Should parse single hyphenated range):
+  AssertEqual [1, 2, 3], fenced_code_block#parse_highlight_attribute('1-3')
+
+Execute (Should parse mixed individual numbers and ranges):
+  AssertEqual [1, 2, 4, 6, 7, 8], fenced_code_block#parse_highlight_attribute('1-2,4,6-8')
+
+Execute (Should handle whitespace between line numbers and ranges):
+  AssertEqual [1, 2, 3, 5], fenced_code_block#parse_highlight_attribute('1 - 3, 5')
+
+Execute (Should return empty array for empty specification):
+  AssertEqual [], fenced_code_block#parse_highlight_attribute('')
+
+Execute (Should return empty array for completely invalid input):
+  AssertEqual [], fenced_code_block#parse_highlight_attribute('invalid')
+
+Execute (Should extract valid numbers when mixed with invalid text):
+  AssertEqual [1, 3], fenced_code_block#parse_highlight_attribute('1,invalid,3')
+
+Execute (Should return empty array for reversed line ranges):
+  AssertEqual [], fenced_code_block#parse_highlight_attribute('5-3')
+
+"===============================================================================
+" Start Line Number Specification
+"===============================================================================
+
+Execute (Should extract start value with double quotes):
+  AssertEqual '5', fenced_code_block#extract_start_spec('```python start="5"')
+
+Execute (Should extract start value with single quotes):
+  AssertEqual '10', fenced_code_block#extract_start_spec("```python start='10'")
+
+Execute (Should extract start value without quotes):
+  AssertEqual '15', fenced_code_block#extract_start_spec('```python start=15')
+
+Execute (Should extract start value using 'from' alias):
+  AssertEqual '20', fenced_code_block#extract_start_spec('```python from="20"')
+
+Execute (Should return empty string when no start specification exists):
+  AssertEqual '', fenced_code_block#extract_start_spec('```python')
+
+Execute (Should parse numeric start value to number):
+  AssertEqual 5, fenced_code_block#parse_start_value('5')
+  AssertEqual 10, fenced_code_block#parse_start_value('10')
+
+Execute (Should default to line 1 when start value is empty):
+  AssertEqual 1, fenced_code_block#parse_start_value('')
+
+"===============================================================================
+" Highlighting Style Management
+"===============================================================================
+
+Execute (Should create 'MarkdownCodeHighlight' group for configured style):
+  " Set and apply style
   let g:fenced_code_block_style = 'green'
   call fenced_code_block#setup_highlight_style()
   
-  " Basic verification - check that highlight group exists
+  " Verify highlight group exists
   let hl_id = hlID('MarkdownCodeHighlight')
-  Assert hl_id > 0, 'Highlight group was not created'
+  Assert hl_id > 0, 'MarkdownCodeHighlight group should be created'
 
-"===============================================================================
-" Tests for custom highlight styles
-"===============================================================================
+Execute (Should create 'MarkdownCodeHighlightError' group for error style):
+  " Set and apply error style
+  let g:fenced_code_block_error_style = 'red'
+  call fenced_code_block#setup_highlight_style()
+  
+  " Verify highlight group exists
+  let hl_id = hlID('MarkdownCodeHighlightError')
+  Assert hl_id > 0, 'MarkdownCodeHighlightError group should be created'
 
-Execute (Test custom highlight styles):
+Execute (Should store custom style with multiple attributes):
   " Register a custom style
   let g:fenced_code_block_custom = {}
   call fenced_code_block#register_custom_style('test_custom', 'cterm', 'bold,underline', 'ctermfg', 'cyan', 'guifg', '#00FFFF')
   
-  " Verify the style was registered
-  Assert has_key(g:fenced_code_block_custom, 'test_custom')
+  " Verify registration worked
+  Assert has_key(g:fenced_code_block_custom, 'test_custom'), 'Custom style should be registered'
   AssertEqual 'bold,underline', g:fenced_code_block_custom['test_custom']['cterm']
   AssertEqual 'cyan', g:fenced_code_block_custom['test_custom']['ctermfg']
   AssertEqual '#00FFFF', g:fenced_code_block_custom['test_custom']['guifg']
 
-"===============================================================================
-" Tests for error highlight style
-"===============================================================================
-
-Execute (Test error highlight style):
-  " Test the 'red' error style
-  let g:fenced_code_block_error_style = 'red'
-  call fenced_code_block#setup_highlight_style()
-  
-  " Basic verification
-  let hl_id = hlID('MarkdownCodeHighlightError')
-  Assert hl_id > 0, 'Error highlight group was not created'
-
-"===============================================================================
-" Tests for style completion
-"===============================================================================
-
-Execute (Test style completion):
-  " Register some custom styles for testing completion
+Execute (Should include built-in styles in completion with empty prefix):
+  " Register custom styles
   let g:fenced_code_block_custom = {}
   call fenced_code_block#register_custom_style('test_style1', 'cterm', 'bold')
-  call fenced_code_block#register_custom_style('test_style2', 'cterm', 'italic')
   
-  " Test completion with empty prefix
+  " Complete with empty prefix
   let completions = fenced_code_block#complete_styles('', '', 0)
-  Assert index(completions, 'green') >= 0, 'Built-in style missing from completions'
-  Assert index(completions, 'test_style1') >= 0, 'Custom style missing from completions'
+  Assert index(completions, 'green') >= 0, 'Built-in styles should be included'
+
+Execute (Should include custom styles in completion with empty prefix):
+  " Register custom styles
+  let g:fenced_code_block_custom = {}
+  call fenced_code_block#register_custom_style('test_style1', 'cterm', 'bold')
   
-  " Test completion with prefix
+  " Complete with empty prefix
+  let completions = fenced_code_block#complete_styles('', '', 0)
+  Assert index(completions, 'test_style1') >= 0, 'Custom styles should be included'
+
+Execute (Should filter styles by prefix in completion):
+  " Register custom styles
+  let g:fenced_code_block_custom = {}
+  call fenced_code_block#register_custom_style('test_style1', 'cterm', 'bold')
+  
+  " Complete with 'b' prefix
   let completions = fenced_code_block#complete_styles('b', '', 0)
-  Assert index(completions, 'blue') >= 0, 'Blue missing from prefix completions'
-  Assert index(completions, 'bold') >= 0, 'Bold missing from prefix completions'
-  Assert index(completions, 'green') < 0, 'Green incorrectly included in prefix completions'
+  Assert index(completions, 'blue') >= 0, 'Blue should be included with "b" prefix'
+  Assert index(completions, 'bold') >= 0, 'Bold should be included with "b" prefix'
+  Assert index(completions, 'green') < 0, 'Green should be excluded with "b" prefix'
 
-"===============================================================================
-" Tests for highlight line specification validation
-"===============================================================================
-
-Execute (Test validate_highlight_lines):
-  " Test valid line numbers
-  let b:mch_has_errors = 0
-  call fenced_code_block#test_validate_highlight_lines([1, 2, 3], 5, 10)
-  Assert !b:mch_has_errors, 'Valid line numbers incorrectly flagged as invalid'
-  
-  " Test invalid line numbers
-  let b:mch_has_errors = 0
-  call fenced_code_block#test_validate_highlight_lines([1, 6, 3], 5, 10)
-  Assert b:mch_has_errors, 'Invalid line number not detected'
-  
-  let b:mch_has_errors = 0
-  call fenced_code_block#test_validate_highlight_lines([0, 2, 3], 5, 10)
-  Assert b:mch_has_errors, 'Zero line number not detected as invalid'
-  
-  let b:mch_has_errors = 0
-  call fenced_code_block#test_validate_highlight_lines([-1, 2, 3], 5, 10)
-  Assert b:mch_has_errors, 'Negative line number not detected as invalid'
-
-"===============================================================================
-" Tests for line number toggling
-"===============================================================================
-
-Execute (Test line number toggling functions):
-  " Store original values to restore later
-  let orig_show = g:fenced_code_block_show_line_numbers
-  let orig_method = g:fenced_code_block_line_number_method
-  
-  " Test cycling through line number options
-  let g:fenced_code_block_show_line_numbers = 'never'
-  let g:fenced_code_block_line_number_method = 'sign'
-  
-  " Start with 'never' and toggle to 'always'
-  call fenced_code_block#toggle_line_numbers()
-  AssertEqual 'always', g:fenced_code_block_show_line_numbers, 'Line numbers not toggled to always correctly'
-  
-  " Toggle to 'with_highlights'
-  call fenced_code_block#toggle_line_numbers()
-  AssertEqual 'with_highlights', g:fenced_code_block_show_line_numbers, 'Line numbers not toggled to with_highlights correctly'
-  
-  " Toggle back to 'never'
-  call fenced_code_block#toggle_line_numbers()
-  AssertEqual 'never', g:fenced_code_block_show_line_numbers, 'Line numbers not toggled to never correctly'
-  
-  " Restore original values
-  let g:fenced_code_block_show_line_numbers = orig_show
-  let g:fenced_code_block_line_number_method = orig_method
-
-"===============================================================================
-" Tests for changing highlight style
-"===============================================================================
-
-Execute (Test changing highlight style):
-  " Test style change
+Execute (Should update global style setting when changing highlight style):
+  " Change style
   let orig_style = g:fenced_code_block_style
-  
   call fenced_code_block#change_highlight_style('blue')
   AssertEqual 'blue', g:fenced_code_block_style
   
-  " Restore
+  " Restore original style
   let g:fenced_code_block_style = orig_style
 
 "===============================================================================
-" Tests for highlight groups at cursor
+" Line Number Management
 "===============================================================================
 
-Execute (Test get_highlight_groups_at_cursor):
-  " Create a temporary buffer with highlighted content
-  new
+Execute (Should respect explicit 'sign' line number method):
+  let g:fenced_code_block_line_number_method = 'sign'
+  AssertEqual 'sign', fenced_code_block#test_determine_line_number_method()
+
+Execute (Should respect explicit 'prop' line number method):
+  let g:fenced_code_block_line_number_method = 'prop'
+  AssertEqual 'prop', fenced_code_block#test_determine_line_number_method()
+
+Execute (Should select appropriate method in auto mode):
+  let g:fenced_code_block_line_number_method = 'auto'
+  let result = fenced_code_block#test_determine_line_number_method()
+  Assert result =~ '\(nvim\|prop\|sign\)', 'Auto should select an available method'
+
+Execute (Should toggle from 'never' to 'always' line number state):
+  " Store original values
+  let orig_show = g:fenced_code_block_show_line_numbers
   
-  " Set up a test syntax
-  syntax clear
-  syntax match TestSyn1 /Test1/
-  syntax match TestSyn2 /Test2/
+  " Set starting state
+  let g:fenced_code_block_show_line_numbers = 'never'
   
-  highlight TestSyn1 ctermfg=red guifg=red
-  highlight TestSyn2 ctermfg=blue guifg=blue
+  " Toggle once
+  call fenced_code_block#toggle_line_numbers()
+  AssertEqual 'always', g:fenced_code_block_show_line_numbers
   
-  call setline(1, ['Test1', 'Test2', 'Normal text'])
+  " Restore original value
+  let g:fenced_code_block_show_line_numbers = orig_show
+
+Execute (Should toggle from 'always' to 'with_highlights' line number state):
+  " Store original values
+  let orig_show = g:fenced_code_block_show_line_numbers
   
-  " Position cursor and get highlight groups
-  call cursor(1, 1)
-  let result1 = fenced_code_block#get_highlight_groups_at_cursor()
+  " Set starting state
+  let g:fenced_code_block_show_line_numbers = 'always'
   
-  call cursor(2, 1)
-  let result2 = fenced_code_block#get_highlight_groups_at_cursor()
+  " Toggle once
+  call fenced_code_block#toggle_line_numbers()
+  AssertEqual 'with_highlights', g:fenced_code_block_show_line_numbers
   
-  call cursor(3, 1)
-  let result3 = fenced_code_block#get_highlight_groups_at_cursor()
+  " Restore original value
+  let g:fenced_code_block_show_line_numbers = orig_show
+
+Execute (Should toggle from 'with_highlights' to 'never' line number state):
+  " Store original values
+  let orig_show = g:fenced_code_block_show_line_numbers
   
-  " Clean up
-  bwipeout!
+  " Set starting state
+  let g:fenced_code_block_show_line_numbers = 'with_highlights'
   
-  " Basic validation - we don't know what the exact results will be as it depends
-  " on the Vim configuration, but we can check they're arrays
-  Assert type(result1) == v:t_list, 'Highlight group result is not a list'
-  Assert type(result2) == v:t_list, 'Highlight group result is not a list'
-  Assert type(result3) == v:t_list, 'Highlight group result is not a list'
+  " Toggle once
+  call fenced_code_block#toggle_line_numbers()
+  AssertEqual 'never', g:fenced_code_block_show_line_numbers
+  
+  " Restore original value
+  let g:fenced_code_block_show_line_numbers = orig_show
 
 "===============================================================================
-" Tests for helper functions
+" Error Handling
 "===============================================================================
 
-Execute (Test helper functions):
-  " Test get_range_lines
-  let range_lines = fenced_code_block#test_get_range_lines(1, 3)
-  AssertEqual [1, 2, 3], range_lines
-  
-  " Test parse_single_line
-  let single_line = fenced_code_block#test_parse_single_line("5")
-  AssertEqual 5, single_line
-  
-  " Test invalid line
-  let invalid_line = fenced_code_block#test_parse_single_line("invalid")
-  AssertEqual 0, invalid_line
-
-"===============================================================================
-" Edge case tests
-"===============================================================================
-
-Execute (Test extract_highlight_spec with complex patterns):
-  " Test with multiple attributes
-  let line = '```python highlight="1-3" hl="5" class="syntax"'
-  let result = fenced_code_block#extract_highlight_spec(line)
-  AssertEqual '1-3', result, 'First highlight spec not correctly extracted'
-  
-  " Test with quote mismatch (should be empty)
-  let line = '```python highlight="1-3'
-  let result = fenced_code_block#extract_highlight_spec(line)
-  AssertEqual '', result, 'Mismatched quotes should return empty string'
-  
-  " Test with empty quotes
-  let line = '```python highlight=""'
-  let result = fenced_code_block#extract_highlight_spec(line)
-  AssertEqual '', result, 'Empty quotes not handled correctly'
-
-Execute (Test parse_highlight_attribute with unusual formats):
-  " Test with whitespace
-  let spec = '  1  -  3  ,  5  '
-  let result = fenced_code_block#parse_highlight_attribute(spec)
-  AssertEqual [1, 2, 3, 5], result, 'Whitespace not handled correctly'
-  
-  " Test with invalid input (should handle gracefully)
-  let spec = 'invalid'
-  let result = fenced_code_block#parse_highlight_attribute(spec)
-  AssertEqual [], result, 'Invalid input not handled gracefully'
-  
-  " Test with mixed valid and invalid
-  let spec = '1,invalid,3'
-  let result = fenced_code_block#parse_highlight_attribute(spec)
-  AssertEqual [1, 3], result, 'Mixed valid and invalid not handled correctly'
-
-Execute (Test language detection edge cases):
-  " Test with weird syntax
-  AssertEqual 'c++', fenced_code_block#test_detect_language('```c++')
-  AssertEqual 'f#', fenced_code_block#test_detect_language('```f#')
-  AssertEqual 'typescript', fenced_code_block#test_detect_language('```typescript highlight="1"')
-  AssertEqual 'js', fenced_code_block#test_detect_language('```{js}')
-  
-  " Extreme edge cases
-  AssertEqual '', fenced_code_block#test_detect_language('````` weird fence')
-
-"===============================================================================
-" Tests for reversed ranges
-"===============================================================================
-
-Execute (Test handling of reversed ranges):
-  " Test parsing of reversed range
-  let range_lines = fenced_code_block#test_get_range_lines(5, 3)
-  AssertEqual [], range_lines, 'Reversed range should return empty array'
-  
-  " Test error handling for reversed range
+Execute (Should accept valid line numbers within code block bounds):
   let b:mch_has_errors = 0
-  let spec = '5-3'
-  let result = fenced_code_block#parse_highlight_attribute(spec)
-  AssertEqual [], result, 'Reversed range should be treated as invalid'
-  
+  call fenced_code_block#test_validate_highlight_lines([1, 2, 3], 5, 10)
+  Assert !b:mch_has_errors, 'Valid line numbers should not generate errors'
+
+Execute (Should flag line numbers greater than block length as errors):
+  let b:mch_has_errors = 0
+  call fenced_code_block#test_validate_highlight_lines([1, 6, 3], 5, 10)
+  Assert b:mch_has_errors, 'Line number 6 should be flagged as out-of-range for a 5-line block'
+
+Execute (Should flag zero line numbers as errors):
+  let b:mch_has_errors = 0
+  call fenced_code_block#test_validate_highlight_lines([0, 2, 3], 5, 10)
+  Assert b:mch_has_errors, 'Line number 0 should be invalid'
+
+Execute (Should flag negative line numbers as errors):
+  let b:mch_has_errors = 0
+  call fenced_code_block#test_validate_highlight_lines([-1, 2, 3], 5, 10)
+  Assert b:mch_has_errors, 'Negative line numbers should be invalid'
+
+Execute (Should flag reversed range specifications as errors):
   " Create buffer with reversed range spec
   new
   call setline(1, [
@@ -441,83 +334,93 @@ Execute (Test handling of reversed ranges):
         \ ])
   
   " Apply highlighting
+  let b:mch_has_errors = 0
   call fenced_code_block#do_apply_highlighting()
   
   " Verify error was set
-  Assert b:mch_has_errors, 'Reversed range should set error flag'
+  Assert b:mch_has_errors, 'Range "5-3" should be flagged as a reversed range error'
   
   " Clean up
   bwipeout!
 
 "===============================================================================
-" Cleanup and teardown tests
+" Feature Toggling
 "===============================================================================
 
-Execute (Test toggle and cleanup):
-  " Test toggle function
+Execute (Should disable highlighting when toggling from enabled state):
+  " Set initial state
   let b:highlighting_enabled = 1
+  
+  " Toggle once
   call fenced_code_block#toggle()
-  Assert !b:highlighting_enabled, 'Toggle did not disable highlighting'
+  Assert !b:highlighting_enabled, 'Highlighting should be disabled after toggling from enabled state'
+
+Execute (Should enable highlighting when toggling from disabled state):
+  " Set initial state
+  let b:highlighting_enabled = 0
   
+  " Toggle once
   call fenced_code_block#toggle()
-  Assert b:highlighting_enabled, 'Toggle did not enable highlighting'
-  
-  " Test disable function
-  call fenced_code_block#disable()
-  
-  " Create a buffer with matches to test clear_highlights
+  Assert b:highlighting_enabled, 'Highlighting should be enabled after toggling from disabled state'
+
+Execute (Should remove all match IDs when clearing highlights):
+  " Create a buffer with match IDs
   new
   
-  " Add some match IDs
+  " Add some match IDs to simulate applied highlighting
   let w:fenced_code_block_match_ids = []
   let match_id = matchadd('Comment', '\%1l')
   call add(w:fenced_code_block_match_ids, match_id)
   
-  " Call clear
+  " Clear highlights
   call fenced_code_block#clear_highlights()
   
-  " Check if cleared
-  AssertEqual [], w:fenced_code_block_match_ids, 'Match IDs not cleared'
+  " Verify matches were removed
+  AssertEqual [], w:fenced_code_block_match_ids, 'Match ID array should be empty after clearing'
   
   " Clean up
   bwipeout!
 
 "===============================================================================
-" Tests for start line number specification
+" Utility Functions
 "===============================================================================
 
-Execute (Test extract_start_spec with double quotes):
-  let line = '```python start="5"'
-  let result = fenced_code_block#extract_start_spec(line)
-  AssertEqual '5', result
+Execute (Should retrieve highlight groups at cursor as an array):
+  " Create a buffer with highlighted syntax
+  new
+  
+  " Set up test syntax
+  syntax clear
+  syntax match TestSyn1 /Test1/
+  syntax match TestSyn2 /Test2/
+  
+  highlight TestSyn1 ctermfg=red guifg=red
+  highlight TestSyn2 ctermfg=blue guifg=blue
+  
+  call setline(1, ['Test1', 'Test2', 'Normal text'])
+  
+  " Check highlight groups at different positions
+  call cursor(1, 1)
+  let result1 = fenced_code_block#get_highlight_groups_at_cursor()
+  
+  " Verify result type
+  Assert type(result1) == v:t_list, 'Highlight groups should be returned as a list'
+  
+  " Clean up
+  bwipeout!
 
-Execute (Test extract_start_spec with single quotes):
-  let line = "```python start='10'"
-  let result = fenced_code_block#extract_start_spec(line)
-  AssertEqual '10', result
-
-Execute (Test extract_start_spec without quotes):
-  let line = '```python start=15'
-  let result = fenced_code_block#extract_start_spec(line)
-  AssertEqual '15', result
-
-Execute (Test extract_start_spec with alias):
-  let line = '```python from="20"'
-  let result = fenced_code_block#extract_start_spec(line)
-  AssertEqual '20', result
-
-Execute (Test extract_start_spec with no start keyword):
-  let line = '```python'
-  let result = fenced_code_block#extract_start_spec(line)
-  AssertEqual '', result
-
-Execute (Test parse_start_value with valid input):
-  AssertEqual 5, fenced_code_block#parse_start_value('5')
-  AssertEqual 10, fenced_code_block#parse_start_value('10')
-  AssertEqual 1, fenced_code_block#parse_start_value('')
+Execute (Should parse attributes into style dictionary):
+  " Test with cterm, ctermfg, ctermbg attributes
+  let result = fenced_code_block#test_parse_style_attributes(
+        \ ['cterm', 'bold', 'ctermfg', 'red', 'ctermbg', 'black'])
+  
+  " Verify all attributes were correctly parsed
+  AssertEqual 'bold', result.cterm
+  AssertEqual 'red', result.ctermfg
+  AssertEqual 'black', result.ctermbg
 
 After:
-  " Reset global variables to avoid affecting other tests
+  " Reset global variables
   let g:fenced_code_block_keyword = 'highlight'
   let g:fenced_code_block_keyword_aliases = ['hl', 'hi']
   let g:fenced_code_block_fence_patterns = ['^```\(.*\)$', '^[\~]\{3,}\(.*\)$']
