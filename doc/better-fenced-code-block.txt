@@ -1,0 +1,92 @@
+*better-fenced-code-block.txt*  Improved highlighting for fenced code blocks
+
+===============================================================================
+CONTENTS                                        *better-fenced-code-block-contents*
+
+    1. Introduction .................. |better-fenced-code-block-introduction|
+    2. Usage ........................ |better-fenced-code-block-usage|
+    3. Configuration ................ |better-fenced-code-block-config|
+    4. Commands ..................... |better-fenced-code-block-commands|
+    5. Mappings ..................... |better-fenced-code-block-mappings|
+    6. License ...................... |better-fenced-code-block-license|
+
+===============================================================================
+1. INTRODUCTION                              *better-fenced-code-block-introduction*
+
+Better Fenced Code Block is a plugin that enhances the syntax highlighting of
+fenced code blocks in Markdown files. It provides better language detection
+and more accurate syntax highlighting for code snippets inside Markdown
+documents.
+
+Key features:
+- Support for numerous programming languages
+- Proper syntax highlighting within fenced code blocks
+- Configurable options
+- Commands to enable/disable highlighting
+- Mappings for quick toggling
+
+===============================================================================
+2. USAGE                                          *better-fenced-code-block-usage*
+
+This plugin is automatically activated when editing Markdown files. It will
+detect fenced code blocks marked with triple backticks (```) and apply
+appropriate syntax highlighting based on the language specified.
+
+Example markdown with a fenced code block:
+>
+    # Example 
+    
+    ```python
+    def hello_world():
+        print("Hello, world!")
+    ```
+<
+
+The plugin will apply Python syntax highlighting to the code inside the block.
+
+===============================================================================
+3. CONFIGURATION                                *better-fenced-code-block-config*
+
+You can configure the plugin behavior with the following variables:
+
+*g:better_fenced_code_block_enabled*    Enable or disable the plugin globally
+                                      Default: 1 (enabled)
+
+To set these in your vimrc file:
+>
+    " Disable plugin by default
+    let g:better_fenced_code_block_enabled = 0
+<
+
+===============================================================================
+4. COMMANDS                                    *better-fenced-code-block-commands*
+
+The plugin provides the following commands:
+
+*:BetterFencedCodeBlockEnable*      Enable the plugin
+*:BetterFencedCodeBlockDisable*     Disable the plugin
+*:BetterFencedCodeBlockToggle*      Toggle the plugin state
+
+===============================================================================
+5. MAPPINGS                                    *better-fenced-code-block-mappings*
+
+The plugin provides the following default mapping:
+
+<Leader>bt                           Toggle the plugin state in the current buffer
+
+You can disable this default mapping by setting:
+>
+    let g:better_fenced_code_block_no_default_mappings = 1
+<
+
+And define your own mapping:
+>
+    nmap <Leader>fc <Plug>(BetterFencedCodeBlockToggle)
+<
+
+===============================================================================
+6. LICENSE                                      *better-fenced-code-block-license*
+
+This plugin uses the same license as Vim itself.
+
+ vim:tw=78:ts=8:ft=help:norl: 
