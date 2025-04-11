@@ -282,17 +282,21 @@ Execute (Test line number toggling functions):
   let orig_show = g:fenced_code_block_show_line_numbers
   let orig_method = g:fenced_code_block_line_number_method
   
-  " Test enabling line numbers
-  let g:fenced_code_block_show_line_numbers = 0
+  " Test cycling through line number options
+  let g:fenced_code_block_show_line_numbers = 'never'
   let g:fenced_code_block_line_number_method = 'sign'
   
-  " Call the toggle function - this should enable line numbers
+  " Start with 'never' and toggle to 'always'
   call fenced_code_block#toggle_line_numbers()
-  AssertEqual 1, g:fenced_code_block_show_line_numbers, 'Line numbers not enabled correctly'
+  AssertEqual 'always', g:fenced_code_block_show_line_numbers, 'Line numbers not toggled to always correctly'
   
-  " Call the toggle function again - this should disable line numbers
+  " Toggle to 'with_highlights'
   call fenced_code_block#toggle_line_numbers()
-  AssertEqual 0, g:fenced_code_block_show_line_numbers, 'Line numbers not disabled correctly'
+  AssertEqual 'with_highlights', g:fenced_code_block_show_line_numbers, 'Line numbers not toggled to with_highlights correctly'
+  
+  " Toggle back to 'never'
+  call fenced_code_block#toggle_line_numbers()
+  AssertEqual 'never', g:fenced_code_block_show_line_numbers, 'Line numbers not toggled to never correctly'
   
   " Restore original values
   let g:fenced_code_block_show_line_numbers = orig_show
