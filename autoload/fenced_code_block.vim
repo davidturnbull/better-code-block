@@ -145,6 +145,22 @@ function! s:parse_range(part)
     let start = str2nr(range_match[1])
     let end = str2nr(range_match[2])
     
+    " Check if this is a reversed range before getting lines
+    if end < start && !empty(a:part)
+      " Mark this as an invalid range that needs error highlighting
+      call s:debug_message("Detected reversed range: " . start . "-" . end)
+      
+      " Set the error flag directly 
+      let b:mch_has_errors = 1
+      
+      " Since we're returning an empty array, manually highlight the error
+      if exists('b:current_fence_line') && b:current_fence_line > 0
+        call s:highlight_invalid_spec(b:current_fence_line, [start, end])
+      endif
+      
+      return []
+    endif
+    
     let lines = s:get_range_lines(start, end)
     call s:debug_message("Added range " . start . "-" . end)
   endif
@@ -155,6 +171,12 @@ endfunction
 " Get all line numbers in a range
 function! s:get_range_lines(start, end)
   let lines = []
+  " Check if the range is reversed (end < start)
+  if a:end < a:start
+    call s:debug_message("Invalid range: end (" . a:end . ") is less than start (" . a:start . ")")
+    return []
+  endif
+  
   for i in range(a:start, a:end)
     call add(lines, i)
   endfor
@@ -163,6 +185,13 @@ endfunction
 
 " Parse a single line number
 function! s:parse_single_line(part)
+  " If the part contains a dash, it's a malformed range that was already 
+  " rejected by s:parse_range, so return 0
+  if a:part =~# '-'
+    call s:debug_message("Rejected malformed range as single line: " . a:part)
+    return 0
+  endif
+
   let num = str2nr(a:part)
   if num > 0
     call s:debug_message("Added single line " . num)
@@ -317,6 +346,9 @@ function! fenced_code_block#do_apply_highlighting()
     let code_block_lines = block['line_count']
     let lines_to_highlight = block['highlight_lines']
     
+    " Store the current fence line for error highlighting
+    let b:current_fence_line = code_block_start
+    
     " Validate line numbers now that we know the total code block size
     if !empty(lines_to_highlight)
       call s:validate_highlight_lines(lines_to_highlight, code_block_lines, code_block_start)
@@ -351,6 +383,9 @@ function! fenced_code_block#do_apply_highlighting()
       endif
     endfor
   endfor
+  
+  " Clear fence line reference
+  unlet! b:current_fence_line
 endfunction
 
 " Enable feature with highlighting
@@ -546,6 +581,17 @@ function! s:highlight_invalid_spec(fence_line, invalid_nums)
               \ '\<\d\+\s*-\s*' . invalid_num . '\>', 
               \ '\<' . invalid_num . '\s*-\s*\d\+\>'
               \ ]
+        
+        " Add specific pattern for reversed ranges
+        if len(a:invalid_nums) >= 2 && index(a:invalid_nums, invalid_num) == 0
+          let next_index = index(a:invalid_nums, invalid_num) + 1
+          if next_index < len(a:invalid_nums)
+            let next_num = a:invalid_nums[next_index]
+            if invalid_num > next_num
+              call add(patterns, '\<' . invalid_num . '\s*-\s*' . next_num . '\>')
+            endif
+          endif
+        endif
         
         for pattern in patterns
           let pos = matchstrpos(highlight_spec, pattern)
@@ -978,4 +1024,9 @@ function! s:disable_line_numbers()
   if method == 'sign'
     set signcolumn=auto
   endif
+endfunction
+
+" Expose get_range_lines for testing
+function! fenced_code_block#test_get_range_lines(start, end)
+  return s:get_range_lines(a:start, a:end)
 endfunction

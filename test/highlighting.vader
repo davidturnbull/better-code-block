@@ -414,6 +414,42 @@ Execute (Test language detection edge cases):
   AssertEqual '', fenced_code_block#test_detect_language('````` weird fence')
 
 "===============================================================================
+" Tests for reversed ranges
+"===============================================================================
+
+Execute (Test handling of reversed ranges):
+  " Test parsing of reversed range
+  let range_lines = fenced_code_block#test_get_range_lines(5, 3)
+  AssertEqual [], range_lines, 'Reversed range should return empty array'
+  
+  " Test error handling for reversed range
+  let b:mch_has_errors = 0
+  let spec = '5-3'
+  let result = fenced_code_block#parse_highlight_attribute(spec)
+  AssertEqual [], result, 'Reversed range should be treated as invalid'
+  
+  " Create buffer with reversed range spec
+  new
+  call setline(1, [
+        \ '# Test Markdown',
+        \ '',
+        \ '```python highlight="5-3"',
+        \ 'def hello():',
+        \ '    print("Hello")',
+        \ '    return True',
+        \ '```'
+        \ ])
+  
+  " Apply highlighting
+  call fenced_code_block#do_apply_highlighting()
+  
+  " Verify error was set
+  Assert b:mch_has_errors, 'Reversed range should set error flag'
+  
+  " Clean up
+  bwipeout!
+
+"===============================================================================
 " Cleanup and teardown tests
 "===============================================================================
 
