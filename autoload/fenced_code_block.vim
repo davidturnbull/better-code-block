@@ -3,96 +3,163 @@
 
 " Parse the highlight property to get line numbers to highlight
 function! fenced_code_block#parse_highlight_spec(line)
-  " Initialize empty array for line numbers
-  let lines_to_highlight = []
-  
-  " Try primary keyword and aliases
-  let keywords = [g:fenced_code_block_keyword] + g:fenced_code_block_keyword_aliases
-  let highlight_spec = ''
-  
-  for keyword in keywords
-    " Try double quotes pattern first
-    let double_quote_pattern = keyword . '="\([^"]*\)"'
-    let matches = matchlist(a:line, double_quote_pattern)
-    
-    if !empty(matches)
-      let highlight_spec = trim(matches[1])
-      call s:debug_message("Found spec with keyword '" . keyword . "' in double quotes: '" . highlight_spec . "'")
-      break
-    endif
-    
-    " Try single quotes pattern
-    let single_quote_pattern = keyword . "='\\([^']*\\)'"
-    let matches = matchlist(a:line, single_quote_pattern)
-    
-    if !empty(matches)
-      let highlight_spec = trim(matches[1])
-      call s:debug_message("Found spec with keyword '" . keyword . "' in single quotes: '" . highlight_spec . "'")
-      break
-    endif
-    
-    " Try without quotes
-    let no_quotes_pattern = keyword . '=\([0-9,\s\-]\+\)'
-    let matches = matchlist(a:line, no_quotes_pattern)
-    
-    if !empty(matches)
-      let highlight_spec = trim(matches[1])
-      call s:debug_message("Found spec with keyword '" . keyword . "' without quotes: '" . highlight_spec . "'")
-      break
-    endif
-  endfor
+  " Extract the highlight specification from the line
+  let highlight_spec = fenced_code_block#extract_highlight_spec(a:line)
   
   " If no highlight property found, return empty array
   if empty(highlight_spec)
     return []
   endif
   
+  " Parse the highlight attribute into line numbers
+  return fenced_code_block#parse_highlight_attribute(highlight_spec)
+endfunction
+
+" Extract highlight specification from a markdown fence line
+function! fenced_code_block#extract_highlight_spec(line)
+  " Try primary keyword and aliases
+  let keywords = [g:fenced_code_block_keyword] + g:fenced_code_block_keyword_aliases
+  let highlight_spec = ''
+  
+  for keyword in keywords
+    " Try to match with each quote style
+    let spec = s:match_keyword_with_quotes(a:line, keyword, '"')
+    if !empty(spec)
+      let highlight_spec = spec
+      call s:debug_message("Found spec with keyword '" . keyword . "' in double quotes: '" . highlight_spec . "'")
+      break
+    endif
+    
+    let spec = s:match_keyword_with_quotes(a:line, keyword, "'")
+    if !empty(spec)
+      let highlight_spec = spec
+      call s:debug_message("Found spec with keyword '" . keyword . "' in single quotes: '" . highlight_spec . "'")
+      break
+    endif
+    
+    " Try without quotes
+    let spec = s:match_keyword_without_quotes(a:line, keyword)
+    if !empty(spec)
+      let highlight_spec = spec
+      call s:debug_message("Found spec with keyword '" . keyword . "' without quotes: '" . highlight_spec . "'")
+      break
+    endif
+  endfor
+  
+  return highlight_spec
+endfunction
+
+" Helper function to match keyword with quotes
+function! s:match_keyword_with_quotes(line, keyword, quote_char)
+  let escaped_quote = (a:quote_char == '"') ? '\"' : "'"
+  let pattern = a:keyword . '=' . a:quote_char . '\([^' . escaped_quote . ']*\)' . a:quote_char
+  let matches = matchlist(a:line, pattern)
+  
+  if !empty(matches)
+    return trim(matches[1])
+  endif
+  
+  return ''
+endfunction
+
+" Helper function to match keyword without quotes
+function! s:match_keyword_without_quotes(line, keyword)
+  let pattern = a:keyword . '=\([0-9,\s\-]\+\)'
+  let matches = matchlist(a:line, pattern)
+  
+  if !empty(matches)
+    return trim(matches[1])
+  endif
+  
+  return ''
+endfunction
+
+" Parse a highlight attribute value into an array of line numbers
+function! fenced_code_block#parse_highlight_attribute(highlight_spec)
+  let lines_to_highlight = []
+  
   " Check for colon format (e.g., "1-2:5")
-  let colon_match = matchlist(highlight_spec, '\(\d\+\)\s*-\s*\(\d\+\)\s*:\s*\(\d\+\)')
+  let colon_lines = s:parse_colon_format(a:highlight_spec)
+  if !empty(colon_lines)
+    return colon_lines
+  endif
+  
+  " Process comma-separated parts
+  for part in split(a:highlight_spec, ',')
+    let part = trim(part)
+    
+    " Check for range (e.g., "1-3")
+    let range_lines = s:parse_range(part)
+    if !empty(range_lines)
+      call extend(lines_to_highlight, range_lines)
+    else
+      " Try to parse as single line
+      let single_line = s:parse_single_line(part)
+      if single_line > 0
+        call add(lines_to_highlight, single_line)
+      endif
+    endif
+  endfor
+  
+  return lines_to_highlight
+endfunction
+
+" Parse the colon format like "1-2:5" into an array of line numbers
+function! s:parse_colon_format(spec)
+  let lines = []
+  
+  let colon_match = matchlist(a:spec, '\(\d\+\)\s*-\s*\(\d\+\)\s*:\s*\(\d\+\)')
   if !empty(colon_match)
     let start = str2nr(colon_match[1])
     let end = str2nr(colon_match[2])
     let single = str2nr(colon_match[3])
     
     " Add range
-    for i in range(start, end)
-      call add(lines_to_highlight, i)
-    endfor
+    let range_lines = s:get_range_lines(start, end)
+    call extend(lines, range_lines)
     
     " Add single line
-    call add(lines_to_highlight, single)
+    call add(lines, single)
     
-    call s:debug_message("Parsed colon format - lines: " . string(lines_to_highlight))
-    return lines_to_highlight
+    call s:debug_message("Parsed colon format - lines: " . string(lines))
   endif
   
-  " Process comma-separated parts
-  for part in split(highlight_spec, ',')
-    let part = trim(part)
-    
-    " Check for range (e.g., "1-3")
-    let range_match = matchlist(part, '\(\d\+\)\s*-\s*\(\d\+\)')
-    if !empty(range_match)
-      let start = str2nr(range_match[1])
-      let end = str2nr(range_match[2])
-      
-      " Add all lines in range
-      for i in range(start, end)
-        call add(lines_to_highlight, i)
-      endfor
-      
-      call s:debug_message("Added range " . start . "-" . end)
-    else
-      " Single line number
-      let num = str2nr(part)
-      if num > 0
-        call add(lines_to_highlight, num)
-        call s:debug_message("Added single line " . num)
-      endif
-    endif
-  endfor
+  return lines
+endfunction
+
+" Parse a range like "1-3" into an array of line numbers
+function! s:parse_range(part)
+  let lines = []
   
-  return lines_to_highlight
+  let range_match = matchlist(a:part, '\(\d\+\)\s*-\s*\(\d\+\)')
+  if !empty(range_match)
+    let start = str2nr(range_match[1])
+    let end = str2nr(range_match[2])
+    
+    let lines = s:get_range_lines(start, end)
+    call s:debug_message("Added range " . start . "-" . end)
+  endif
+  
+  return lines
+endfunction
+
+" Get all line numbers in a range
+function! s:get_range_lines(start, end)
+  let lines = []
+  for i in range(a:start, a:end)
+    call add(lines, i)
+  endfor
+  return lines
+endfunction
+
+" Parse a single line number
+function! s:parse_single_line(part)
+  let num = str2nr(a:part)
+  if num > 0
+    call s:debug_message("Added single line " . num)
+    return num
+  endif
+  return 0
 endfunction
 
 " Apply highlighting to specified lines
@@ -110,19 +177,16 @@ function! fenced_code_block#apply_highlighting()
   endif
 endfunction
 
-" Actual highlighting application (after potential delay)
-function! fenced_code_block#do_apply_highlighting()
-  " Clear previous highlights
-  call fenced_code_block#clear_highlights()
-  
-  " Get buffer content
+" Find code blocks in the buffer and return their information
+function! s:find_code_blocks()
   let buffer_text = getline(1, '$')
+  let code_blocks = []
   let in_code_block = 0
   let code_block_start = 0
   let line_num = 0
   let fence_type = ''
   let code_block_lines = 0
-  let b:mch_has_errors = 0  " Reset error flag for this buffer
+  let current_block = {}
   
   " Process each line in the buffer
   for line in buffer_text
@@ -150,6 +214,14 @@ function! fenced_code_block#do_apply_highlighting()
         let fence_type = fence_match
         " Reset the code block line count
         let code_block_lines = 0
+        let language = s:detect_language(line)
+        let current_block = {
+              \ 'start_line': code_block_start,
+              \ 'fence_type': fence_type,
+              \ 'highlight_lines': lines_to_highlight,
+              \ 'language': language,
+              \ 'content_lines': []
+              \ }
         call s:debug_message("Found code block at line " . line_num . " with fence: " . fence_type . ", highlight lines: " . string(lines_to_highlight))
         continue
       endif
@@ -157,23 +229,50 @@ function! fenced_code_block#do_apply_highlighting()
     
     " Check for code block end (exact match with the fence that started it)
     if in_code_block && line =~ '^' . fence_type . '$'
-      " Validate line numbers now that we know the total code block size
-      if exists('lines_to_highlight') && !empty(lines_to_highlight)
-        call s:validate_highlight_lines(lines_to_highlight, code_block_lines, code_block_start)
-      endif
-      
+      let current_block['end_line'] = line_num
+      let current_block['line_count'] = code_block_lines
+      call add(code_blocks, current_block)
       let in_code_block = 0
       call s:debug_message("Code block ended at line " . line_num . " with fence: " . fence_type)
       continue
     endif
     
-    " Inside code block - count lines
+    " Inside code block - track content
     if in_code_block
       let code_block_lines += 1
-      let relative_line = line_num - code_block_start
+      call add(current_block['content_lines'], {'line_num': line_num, 'content': line, 'relative_line': code_block_lines})
+    endif
+  endfor
+  
+  return code_blocks
+endfunction
+
+" Actual highlighting application (after potential delay)
+function! fenced_code_block#do_apply_highlighting()
+  " Clear previous highlights
+  call fenced_code_block#clear_highlights()
+  
+  let b:mch_has_errors = 0  " Reset error flag for this buffer
+  let code_blocks = s:find_code_blocks()
+  
+  " Process each code block
+  for block in code_blocks
+    let code_block_start = block['start_line']
+    let code_block_lines = block['line_count']
+    let lines_to_highlight = block['highlight_lines']
+    
+    " Validate line numbers now that we know the total code block size
+    if !empty(lines_to_highlight)
+      call s:validate_highlight_lines(lines_to_highlight, code_block_lines, code_block_start)
+    endif
+    
+    " Process each content line
+    for content_line in block['content_lines']
+      let line_num = content_line['line_num']
+      let relative_line = content_line['relative_line']
       
       " Apply highlight to specified lines within code block
-      if exists('lines_to_highlight') && !empty(lines_to_highlight)
+      if !empty(lines_to_highlight)
         if index(lines_to_highlight, relative_line) >= 0
           call s:highlight_line(line_num)
           call s:debug_message("Highlighted line " . line_num . " (relative line " . relative_line . ")")
@@ -184,7 +283,7 @@ function! fenced_code_block#do_apply_highlighting()
           call s:place_line_number(line_num, relative_line)
         endif
       endif
-    endif
+    endfor
   endfor
 endfunction
 
@@ -223,18 +322,7 @@ function! s:place_line_number(line_num, relative_line)
   let line_number_text = substitute(g:fenced_code_block_line_number_format, '%d', a:relative_line, 'g')
   
   " Determine method to use
-  let method = g:fenced_code_block_line_number_method
-  
-  " If auto, select best available method
-  if method == 'auto'
-    if has('nvim-0.5')
-      let method = 'nvim'
-    elseif exists('*prop_type_add')
-      let method = 'prop'
-    else
-      let method = 'sign'
-    endif
-  endif
+  let method = s:determine_line_number_method()
   
   if method == 'nvim' && has('nvim-0.5')
     call s:place_line_number_nvim(a:line_num, line_number_text)
@@ -243,6 +331,24 @@ function! s:place_line_number(line_num, relative_line)
   else
     call s:place_line_number_sign(a:line_num, a:relative_line)
   endif
+endfunction
+
+" Determine the best line number method based on configuration and capabilities
+function! s:determine_line_number_method()
+  let method = g:fenced_code_block_line_number_method
+  
+  " If auto, select best available method
+  if method == 'auto'
+    if has('nvim-0.5')
+      return 'nvim'
+    elseif exists('*prop_type_add')
+      return 'prop'
+    else
+      return 'sign'
+    endif
+  endif
+  
+  return method
 endfunction
 
 " Place a line number using Neovim's virtual text
@@ -469,18 +575,7 @@ function! fenced_code_block#clear_highlights()
   2match none
   
   " Clear line numbers based on method
-  let method = g:fenced_code_block_line_number_method
-  
-  " If auto, select best available method
-  if method == 'auto'
-    if has('nvim-0.5')
-      let method = 'nvim'
-    elseif exists('*prop_type_add')
-      let method = 'prop'
-    else
-      let method = 'sign'
-    endif
-  endif
+  let method = s:determine_line_number_method()
   
   if method == 'nvim' && has('nvim-0.5')
     call s:clear_line_number_nvim()
@@ -496,61 +591,79 @@ function! fenced_code_block#setup_highlight_style()
   " Clear existing highlighting
   silent! highlight clear MarkdownCodeHighlight
   
-  " Apply style based on configuration
+  " Apply main highlight style
+  call s:apply_main_highlight_style()
+  
+  " Setup error highlight style
+  call s:apply_error_highlight_style()
+endfunction
+
+" Apply the main highlight style based on configuration
+function! s:apply_main_highlight_style()
   if has_key(g:fenced_code_block_custom, g:fenced_code_block_style)
-    " Apply custom style definition
-    let custom = g:fenced_code_block_custom[g:fenced_code_block_style]
-    let cmd = 'highlight MarkdownCodeHighlight'
-    
-    " Handle term/cterm attributes
-    if has_key(custom, 'cterm')
-      let cmd .= ' cterm=' . custom.cterm
-    endif
-    if has_key(custom, 'ctermfg')
-      let cmd .= ' ctermfg=' . custom.ctermfg
-    endif
-    if has_key(custom, 'ctermbg')
-      let cmd .= ' ctermbg=' . custom.ctermbg
-    endif
-    
-    " Handle gui attributes
-    if has_key(custom, 'gui')
-      let cmd .= ' gui=' . custom.gui
-    endif
-    if has_key(custom, 'guifg')
-      let cmd .= ' guifg=' . custom.guifg
-    endif
-    if has_key(custom, 'guibg')
-      let cmd .= ' guibg=' . custom.guibg
-    endif
-    
-    execute cmd
-  elseif g:fenced_code_block_style == 'green'
-    highlight MarkdownCodeHighlight ctermbg=green ctermfg=black guibg=#00FF00 guifg=#000000
-  elseif g:fenced_code_block_style == 'blue'
-    highlight MarkdownCodeHighlight ctermbg=blue ctermfg=white guibg=#0000FF guifg=#FFFFFF
-  elseif g:fenced_code_block_style == 'yellow'
-    highlight MarkdownCodeHighlight ctermbg=yellow ctermfg=black guibg=#FFFF00 guifg=#000000
-  elseif g:fenced_code_block_style == 'cyan'
-    highlight MarkdownCodeHighlight ctermbg=cyan ctermfg=black guibg=#00FFFF guifg=#000000
-  elseif g:fenced_code_block_style == 'magenta'
-    highlight MarkdownCodeHighlight ctermbg=magenta ctermfg=black guibg=#FF00FF guifg=#000000
-  elseif g:fenced_code_block_style == 'invert'
-    highlight MarkdownCodeHighlight cterm=reverse gui=reverse
-  elseif g:fenced_code_block_style == 'bold'
-    highlight MarkdownCodeHighlight cterm=bold gui=bold
-  elseif g:fenced_code_block_style == 'italic'
-    highlight MarkdownCodeHighlight cterm=italic gui=italic
-  elseif g:fenced_code_block_style == 'underline'
-    highlight MarkdownCodeHighlight cterm=underline gui=underline
-  elseif g:fenced_code_block_style == 'undercurl'
-    highlight MarkdownCodeHighlight cterm=undercurl gui=undercurl
+    call s:apply_custom_highlight_style(g:fenced_code_block_style)
+  elseif g:fenced_code_block_style =~ '^\(green\|blue\|yellow\|cyan\|magenta\)$'
+    call s:apply_color_highlight_style(g:fenced_code_block_style)
+  elseif g:fenced_code_block_style =~ '^\(invert\|bold\|italic\|underline\|undercurl\)$'
+    call s:apply_attribute_highlight_style(g:fenced_code_block_style)
   else
     " Default fallback - DiffAdd is usually green in most colorschemes
     highlight link MarkdownCodeHighlight DiffAdd
   endif
+endfunction
+
+" Apply custom highlight style from configuration
+function! s:apply_custom_highlight_style(style_name)
+  let custom = g:fenced_code_block_custom[a:style_name]
+  let cmd = 'highlight MarkdownCodeHighlight'
   
-  " Setup error highlight style
+  " Handle term/cterm attributes
+  if has_key(custom, 'cterm')
+    let cmd .= ' cterm=' . custom.cterm
+  endif
+  if has_key(custom, 'ctermfg')
+    let cmd .= ' ctermfg=' . custom.ctermfg
+  endif
+  if has_key(custom, 'ctermbg')
+    let cmd .= ' ctermbg=' . custom.ctermbg
+  endif
+  
+  " Handle gui attributes
+  if has_key(custom, 'gui')
+    let cmd .= ' gui=' . custom.gui
+  endif
+  if has_key(custom, 'guifg')
+    let cmd .= ' guifg=' . custom.guifg
+  endif
+  if has_key(custom, 'guibg')
+    let cmd .= ' guibg=' . custom.guibg
+  endif
+  
+  execute cmd
+endfunction
+
+" Apply a color-based highlight style
+function! s:apply_color_highlight_style(color)
+  if a:color == 'green'
+    highlight MarkdownCodeHighlight ctermbg=green ctermfg=black guibg=#00FF00 guifg=#000000
+  elseif a:color == 'blue'
+    highlight MarkdownCodeHighlight ctermbg=blue ctermfg=white guibg=#0000FF guifg=#FFFFFF
+  elseif a:color == 'yellow'
+    highlight MarkdownCodeHighlight ctermbg=yellow ctermfg=black guibg=#FFFF00 guifg=#000000
+  elseif a:color == 'cyan'
+    highlight MarkdownCodeHighlight ctermbg=cyan ctermfg=black guibg=#00FFFF guifg=#000000
+  elseif a:color == 'magenta'
+    highlight MarkdownCodeHighlight ctermbg=magenta ctermfg=black guibg=#FF00FF guifg=#000000
+  endif
+endfunction
+
+" Apply attribute-based highlight style
+function! s:apply_attribute_highlight_style(attr)
+  execute 'highlight MarkdownCodeHighlight cterm=' . a:attr . ' gui=' . a:attr
+endfunction
+
+" Apply error highlight style
+function! s:apply_error_highlight_style()
   silent! highlight clear MarkdownCodeHighlightError
   
   if g:fenced_code_block_error_style == 'red'
@@ -567,29 +680,34 @@ endfunction
 function! fenced_code_block#toggle_line_numbers()
   let g:fenced_code_block_show_line_numbers = !g:fenced_code_block_show_line_numbers
   
-  " Toggle line numbers
   if g:fenced_code_block_show_line_numbers
-    set number
-    
-    " Only set signcolumn if using the sign method
-    let method = g:fenced_code_block_line_number_method
-    if method == 'auto' && !has('nvim-0.5') && !exists('*prop_type_add')
-      set signcolumn=yes:1
-    elseif method == 'sign'
-      set signcolumn=yes:1
-    endif
+    call s:enable_line_numbers()
   else
-    " Reset signcolumn if needed
-    let method = g:fenced_code_block_line_number_method
-    if method == 'auto' && !has('nvim-0.5') && !exists('*prop_type_add')
-      set signcolumn=auto
-    elseif method == 'sign'
-      set signcolumn=auto
-    endif
+    call s:disable_line_numbers()
   endif
   
   call fenced_code_block#apply_highlighting()
   echo "Line numbers " . (g:fenced_code_block_show_line_numbers ? "enabled" : "disabled")
+endfunction
+
+" Enable line numbers in the buffer
+function! s:enable_line_numbers()
+  set number
+  
+  " Only set signcolumn if using the sign method
+  let method = s:determine_line_number_method()
+  if method == 'sign'
+    set signcolumn=yes:1
+  endif
+endfunction
+
+" Disable line numbers in the buffer
+function! s:disable_line_numbers()
+  " Reset signcolumn if needed
+  let method = s:determine_line_number_method()
+  if method == 'sign'
+    set signcolumn=auto
+  endif
 endfunction
 
 " Style-related functions
@@ -607,40 +725,96 @@ function! fenced_code_block#change_highlight_style(style)
   echo "Highlight style changed to: " . a:style
 endfunction
 
+" Register a custom highlight style
 function! fenced_code_block#register_custom_style(name, ...)
   if a:0 == 0
     echoerr "FencedCodeBlockRegisterStyle requires at least one attribute!"
     return
   endif
   
-  let custom = {}
-  let i = 0
+  let custom = s:parse_style_attributes(a:000)
   
-  while i < a:0
-    let attr = a:000[i]
-    let i += 1
-    
-    if i >= a:0
-      echoerr "Missing value for attribute: " . attr
-      return
-    endif
-    
-    let value = a:000[i]
-    let custom[attr] = value
-    let i += 1
-  endwhile
+  if empty(custom)
+    echoerr "Failed to parse style attributes!"
+    return
+  endif
   
   let g:fenced_code_block_custom[a:name] = custom
   echo "Registered custom style: " . a:name
 endfunction
 
-" Additional helper functions
+" Parse style attributes from varargs
+function! s:parse_style_attributes(attrs)
+  let custom = {}
+  let i = 0
+  
+  while i < len(a:attrs)
+    let attr = a:attrs[i]
+    let i += 1
+    
+    if i >= len(a:attrs)
+      echoerr "Missing value for attribute: " . attr
+      return {}
+    endif
+    
+    let value = a:attrs[i]
+    let custom[attr] = value
+    let i += 1
+  endwhile
+  
+  return custom
+endfunction
+
+" Detect language from fence line
 function! s:detect_language(fence_line)
-  " Parse the language from the fence line
-  " Example: ```python -> 'python'
-  let matches = matchlist(a:fence_line, '```\s*\(\w\+\)')
+  " Try different fence patterns to extract the language
+  
+  " Pattern 1: Standard markdown format - ```language
+  let patterns = [
+        \ '```\s*\(\w\+\)',             
+        \ '```\(\w\+\)',                
+        \ '```\s*\(\w\+\)\s\+.*',       
+        \ '```\s*\(\w\+-\w\+\)',        
+        \ '```\s*\(\w\+\.\w\+\)'        
+        \ ]
+  
+  for pattern in patterns
+    let matches = matchlist(a:fence_line, pattern)
+    if len(matches) > 1 && !empty(matches[1])
+      call s:debug_message("Detected language: " . matches[1] . " using pattern: " . pattern)
+      return matches[1]
+    endif
+  endfor
+  
+  " Pattern 2: Jekyll/Hugo style - ```{language}
+  let curly_pattern = '```{\(\w\+\)}'  
+  let matches = matchlist(a:fence_line, curly_pattern)
   if len(matches) > 1 && !empty(matches[1])
+    call s:debug_message("Detected language: " . matches[1] . " using curly brace pattern")
     return matches[1]
   endif
+  
+  " No language found
+  call s:debug_message("No language detected in fence: " . a:fence_line)
   return ''
+endfunction
+
+" Get highlight groups at cursor position 
+function! fenced_code_block#get_highlight_groups_at_cursor()
+  let highlight_groups = []
+  let stack = synstack(line('.'), col('.'))
+  
+  for id in stack
+    call add(highlight_groups, synIDattr(id, 'name'))
+  endfor
+  
+  " Add linked groups
+  for id in stack
+    let linked_id = synIDtrans(id)
+    if linked_id != id
+      call add(highlight_groups, synIDattr(linked_id, 'name'))
+    endif
+  endfor
+  
+  return highlight_groups 
 endfunction 
