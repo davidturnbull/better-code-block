@@ -13,49 +13,108 @@ CONTENTS                                        *better-fenced-code-block-conten
 ===============================================================================
 1. INTRODUCTION                              *better-fenced-code-block-introduction*
 
-Better Fenced Code Block is a plugin that enhances the syntax highlighting of
-fenced code blocks in Markdown files. It provides better language detection
-and more accurate syntax highlighting for code snippets inside Markdown
-documents.
+Better Fenced Code Block is a plugin that enhances syntax highlighting in 
+Markdown code blocks by allowing you to highlight specific lines. This is 
+particularly useful when explaining code examples, where you want to draw
+attention to certain important lines.
 
 Key features:
+- Highlight specific lines within fenced code blocks
 - Support for numerous programming languages
-- Proper syntax highlighting within fenced code blocks
-- Configurable options
-- Commands to enable/disable highlighting
-- Mappings for quick toggling
+- Multiple highlighting styles (colors, bold, italic, etc.)
+- Line numbering within code blocks
+- Configurable options for appearance and behavior
 
 ===============================================================================
 2. USAGE                                          *better-fenced-code-block-usage*
 
-This plugin is automatically activated when editing Markdown files. It will
-detect fenced code blocks marked with triple backticks (```) and apply
-appropriate syntax highlighting based on the language specified.
+This plugin is automatically activated when editing Markdown files. It detects
+fenced code blocks marked with triple backticks (```) and applies highlighting
+based on the specified attributes.
 
-Example markdown with a fenced code block:
+To highlight specific lines, add a highlight attribute to your code fence:
+
+Example markdown with highlighted lines:
 >
     # Example 
     
-    ```python
+    ```python highlight="1-3,5"
     def hello_world():
         print("Hello, world!")
+        return True
+        
+    if __name__ == "__main__":
+        hello_world()
     ```
 <
 
-The plugin will apply Python syntax highlighting to the code inside the block.
+This will highlight lines 1-3 and line 5 within the code block.
+
+The highlight attribute supports multiple formats:
+- Single line: highlight="3"
+- Multiple lines: highlight="1,3,5"
+- Line ranges: highlight="1-3"
+- Mixed: highlight="1-3,5,7-9"
+- Alternative syntax with colon: highlight="1-3:5" (highlights lines 1-3 and 5)
+
+Alternative keywords:
+- You can also use "hl", "mark", or "emphasize" instead of "highlight"
+- Example: ```python hl="1-3"
 
 ===============================================================================
 3. CONFIGURATION                                *better-fenced-code-block-config*
 
 You can configure the plugin behavior with the following variables:
 
-*g:better_fenced_code_block_enabled*    Enable or disable the plugin globally
-                                      Default: 1 (enabled)
+*g:markdown_highlight_style*        Highlight style (default: 'green')
+                                  Available: 'green', 'blue', 'yellow', 'cyan',
+                                  'magenta', 'invert', 'bold', 'italic',
+                                  'underline', 'undercurl', or custom styles
 
-To set these in your vimrc file:
+*g:markdown_highlight_custom*       Dictionary of custom highlight styles
+
+*g:markdown_highlight_debug*        Debug mode (0=off, 1=on)
+
+*g:markdown_highlight_extensions*   File extensions to process
+                                  Default: ['md', 'markdown', 'txt']
+
+*g:markdown_highlight_keyword*      Primary highlight keyword (default: 'highlight')
+
+*g:markdown_highlight_keyword_aliases* 
+                                  Alternative keywords
+                                  Default: ['hl', 'mark', 'emphasize']
+
+*g:markdown_highlight_show_line_numbers*
+                                  Enable/disable line numbers (1=on, 0=off)
+
+*g:markdown_highlight_line_number_method*
+                                  How to display line numbers:
+                                  'nvim', 'prop', 'sign', or 'auto'
+
+*g:markdown_highlight_line_number_format*
+                                  Format string for line numbers (default: ' %d ')
+
+*g:markdown_highlight_line_number_style*
+                                  Highlight group for line numbers
+
+*g:markdown_highlight_error_style*  Style for errors (default: 'red')
+
+*g:markdown_highlight_update_delay* Update delay in ms (0 for immediate)
+
+*g:markdown_highlight_fence_patterns*
+                                  Custom fence patterns for code blocks
+
+Configuration examples:
 >
-    " Disable plugin by default
-    let g:better_fenced_code_block_enabled = 0
+    " Change default highlight style to yellow
+    let g:markdown_highlight_style = 'yellow'
+    
+    " Disable line numbers in code blocks
+    let g:markdown_highlight_show_line_numbers = 0
+    
+    " Register a custom highlight style
+    call MarkdownHighlightRegisterStyle('my_style', 'ctermbg', 'lightblue', 'guibg', '#AADDFF')
+    let g:markdown_highlight_style = 'my_style'
 <
 
 ===============================================================================
@@ -63,9 +122,21 @@ To set these in your vimrc file:
 
 The plugin provides the following commands:
 
-*:BetterFencedCodeBlockEnable*      Enable the plugin
-*:BetterFencedCodeBlockDisable*     Disable the plugin
-*:BetterFencedCodeBlockToggle*      Toggle the plugin state
+*:MarkdownHighlightRefresh*       Force refresh of all highlights
+*:MarkdownHighlightClear*         Clear all highlights
+*:MarkdownHighlightToggleDebug*   Toggle debug mode
+*:MarkdownHighlightStyle* {style} Change highlight style
+*:MarkdownToggleLineNumbers*      Toggle line numbers in code blocks
+*:MarkdownHighlightRegisterStyle* Register a custom highlight style
+
+Examples:
+>
+    " Change to blue highlight style
+    :MarkdownHighlightStyle blue
+    
+    " Register a custom inverted yellow style
+    :MarkdownHighlightRegisterStyle bright_yellow guibg #FFFF00 guifg #000000 gui bold
+<
 
 ===============================================================================
 5. MAPPINGS                                    *better-fenced-code-block-mappings*
@@ -74,12 +145,7 @@ The plugin provides the following default mapping:
 
 <Leader>bt                           Toggle the plugin state in the current buffer
 
-You can disable this default mapping by setting:
->
-    let g:better_fenced_code_block_no_default_mappings = 1
-<
-
-And define your own mapping:
+You can define your own mapping:
 >
     nmap <Leader>fc <Plug>(BetterFencedCodeBlockToggle)
 <

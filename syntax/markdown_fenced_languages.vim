@@ -32,6 +32,7 @@ let s:supported_languages = {
   \ 'md': 'markdown'
   \ }
 
+" Load syntax for a specific language
 function! s:load_syntax_for(lang)
   let l:lang_name = get(s:supported_languages, a:lang, '')
   
@@ -44,10 +45,13 @@ function! s:load_syntax_for(lang)
   let l:syntax_file = 'syntax/' . l:lang_name . '.vim'
   if filereadable($VIMRUNTIME . '/' . l:syntax_file)
     execute 'syntax include @' . l:lang_name . ' ' . l:syntax_file
+    
+    " Create region for this language that works with our highlight pattern
+    " The region excludes the ```lang line and the closing ``` line
     execute 'syntax region fenced' . l:lang_name . ' matchgroup=markdownCodeDelimiter ' .
-          \ 'start=/^```\s*' . a:lang . '\s*$/ ' .
+          \ 'start=/^```\s*' . a:lang . '\s*.*$/ ' .
           \ 'end=/^```\s*$/ ' .
-          \ 'keepend contains=@' . l:lang_name
+          \ 'keepend contains=@' . l:lang_name . ',MarkdownCodeHighlight'
   endif
 endfunction
 
@@ -56,4 +60,7 @@ function! better_fenced_code_block#load_all_syntaxes()
   for [lang, _] in items(s:supported_languages)
     call s:load_syntax_for(lang)
   endfor
-endfunction 
+endfunction
+
+" Initialize syntax loading
+call better_fenced_code_block#load_all_syntaxes() 
