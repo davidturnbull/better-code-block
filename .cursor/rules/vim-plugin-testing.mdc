@@ -1,0 +1,144 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+ # Vim Plugin Testing with Vader
+
+## Setup
+- Install Vader: `Plug 'junegunn/vader.vim'`
+- Create a `test/` directory in your plugin
+- Organize test files with `.vader` extension
+- Add test runner to CI configuration
+
+## Basic Structure
+- Vader tests use blocks:
+  ```vim
+  " Test description
+  Given (fixture):
+    " Initial text/setup
+  Do (action):
+    " Commands to execute
+  Execute (script):
+    " VimScript to run
+  Expect (result):
+    " Expected text after transformation
+  Assert (condition):
+    " Assertion that should be true
+  ```
+
+## Organization
+- Group related tests in the same file
+- Name test files descriptively: `feature_name.vader`
+- Create helper functions in separate files
+- Structure complex tests hierarchically
+- Use comments to document test purpose
+- Isolate tests to prevent state sharing
+
+## Command Execution
+- Use `:normal` to simulate keystrokes
+- Use `:execute` for dynamic commands
+- Prefer `normal!` over `normal` to avoid user mappings
+- Add small sleeps (`sleep 10m`) when testing async operations
+- Use `h: command history` to debug command sequences
+
+## Assertions
+- Use `Assert` for boolean conditions
+- Use `AssertEqual` for value comparisons
+- Use `AssertNotEqual` for negative comparisons
+- Use `AssertThrows` for exception testing
+- Compare exact strings with `Expect` blocks
+
+## Isolation
+- Reset plugin state between tests
+- Mock external dependencies
+- Use `vim.cmd('filetype off | syntax off')` before sensitive tests
+- Set up clean runtime with minimal vimrc
+- Restore global settings with `Save/Restore` blocks:
+  ```vim
+  Save:
+    let g:original_value = g:plugin_option
+    let g:plugin_option = 'test_value'
+  Restore:
+    let g:plugin_option = g:original_value
+  ```
+
+## Common Test Types
+- Function unit tests:
+  ```vim
+  Execute (Test my_function with valid input):
+    let result = my_plugin#my_function('input')
+    AssertEqual 'expected', result
+  ```
+
+- Command tests:
+  ```vim
+  Execute (Test MyCommand behavior):
+    command
+    AssertEqual expected, g:result_variable
+  ```
+
+- Mapping tests:
+  ```vim
+  Given:
+    initial text
+  Do:
+    normal! \<Plug>(MyMapping)
+  Expect:
+    transformed text
+  ```
+
+- Autocommand tests:
+  ```vim
+  Execute (Test FileType autocommand):
+    set filetype=test_filetype
+    AssertEqual expected, b:variable_set_by_autocommand
+  ```
+
+## Running Tests
+- Command line: `vim -Nu minimal_vimrc -c 'Vader! test/**/*.vader'`
+- From Vim: `:Vader test/**/*.vader`
+- Filter tests: `:Vader test/specific_test.vader`
+- Verbose mode: `:Vader! test/**/*.vader`
+- Get test results programmatically with `vader#run`
+
+## GitHub Actions Integration
+```yaml
+name: Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Vim
+        run: sudo apt-get install vim
+      - name: Clone Vader
+        run: git clone https://github.com/junegunn/vader.vim.git
+      - name: Run tests
+        run: |
+          vim -Nu <(cat << EOF
+          filetype off
+          set rtp+=vader.vim
+          set rtp+=.
+          set rtp+=after
+          filetype plugin indent on
+          syntax enable
+          EOF) -c 'Vader! test/**/*.vader' > /dev/null
+```
+
+## Debugging Tests
+- Use `:VaderRepeat` to rerun the last test
+- Add `Log` statements: `Log "Variable value: " . variable`
+- Use `:messages` to see output during debugging
+- Add `BREAK` points: `Execute: BREAK`
+- Examine test state with `:echo g:vader_file g:vader_line`
+
+## Best Practices
+- Test the public API, not implementation details
+- Write test first (TDD) for critical functionality
+- Keep tests focused and simple
+- Balance unit and integration tests
+- Update tests when changing behavior
+- Test edge cases and error handling
+- Document test prerequisites

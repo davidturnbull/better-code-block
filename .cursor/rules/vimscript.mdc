@@ -1,0 +1,59 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+ # Vimscript Guidelines
+
+## Naming
+- Prefix global plugin variables with `g:your_plugin_name_`
+- Use `s:` for script-local variables and functions
+- Use `l:` for explicit local variables in functions
+- Use snake_case for variables and functions
+- Use UPPER_CASE for constants
+
+## Functions
+- Prefix plugin functions with `YourPluginName#`
+- Use `abort` in function definitions to stop on first error
+- Return explicit values (0 for success, non-zero for errors)
+- Document parameters and return values in comments
+
+## Conditionals
+- Prefer `if` over ternary (`?:`) for readability
+- Use `==# !=# >=# <=# ># <#` for case-sensitive string comparison
+- Use `==? !=? >=? <=? >? <?` for case-insensitive comparison
+
+## Commands and Mappings
+- Define commands with CamelCase names
+- Use `<Plug>` mappings for user-configurable mappings
+- Check for existing mappings before overriding
+- Provide `<unique>` where appropriate
+
+## Performance
+- Avoid excessive use of `execute()`
+- Cache computed values when possible
+- Use native Vim functions over external calls
+- Use dictionary functions over repeated string concatenation
+
+## Compatibility
+- Check feature existence with `has()`
+- Check Vim/Neovim version with `v:version` and `has('nvim')`
+- Provide fallbacks for missing features
+- Specify minimum version requirements in docs
+
+## Debugging
+- Use `echomsg` instead of `echo` for debugging (viewable in `:messages`)
+- Add debug mode toggle variable
+- Wrap debug statements in debug mode checks
+
+## Documentation
+- Document all user-facing functions, commands, and mappings
+- Document all configuration variables with defaults
+- Use Vim's help format for documentation
+- Provide examples for common use cases
+
+## Autoloading
+- Use autoload pattern for better startup performance
+- Split large plugins into logical autoload modules
+- Structure: `autoload/yourplugin/module.vim`
+- Reference as `call yourplugin#module#function()`

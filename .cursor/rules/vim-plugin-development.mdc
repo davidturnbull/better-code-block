@@ -1,0 +1,93 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Vim Plugin Development Best Practices
+
+## Structure
+- Use a standard plugin layout:
+  ```
+  plugin/             # Loaded once when Vim starts
+  autoload/           # Loaded on demand for better performance
+  ftplugin/           # Filetype-specific settings
+  doc/                # Documentation in Vim help format
+  syntax/             # Syntax highlighting definitions
+  colors/             # Colorschemes
+  ftdetect/           # Filetype detection
+  indent/             # Indentation rules
+  after/              # Files loaded after Vim's defaults
+  ```
+- Split functionality into logical modules
+- Use autoload for all but essential startup code
+
+## Configuration
+- Provide sensible defaults for all options
+- Document all user-configurable variables
+- Check if variables exist before setting defaults:
+  ```vim
+  if !exists('g:plugin_option')
+    let g:plugin_option = 'default_value'
+  endif
+  ```
+- Use dictionaries for grouped settings
+- Support both global and buffer-local settings where appropriate
+
+## User Interface
+- Create commands with clear, descriptive names
+- Expose `<Plug>` mappings instead of hardcoding key combinations
+- Support repeat.vim for repeatable actions
+- Implement undo integration for modifications
+- Provide informative, non-intrusive feedback
+- Follow Vim's UI patterns and terminology
+
+## Performance
+- Lazy-load functionality using autoload
+- Cache computed results when appropriate
+- Avoid VimScript loops for large datasets
+- Use `silent!` for expected errors that should be ignored
+- Profile your plugin using `:profile`
+- Batch buffer modifications to reduce screen updates
+- Use efficient data structures (Lists, Dictionaries)
+
+## Error Handling
+- Always use `function! s:func() abort` to abort on errors
+- Provide meaningful error messages
+- Implement appropriate error recovery
+- Consider try/catch for predictable error conditions
+- Validate user input before processing
+- Clean up temporary resources in finally blocks
+
+## Documentation
+- Provide a proper `doc/plugin.txt` Vim help file
+- Include installation instructions
+- Document all commands, mappings, and options
+- Add usage examples and screenshots in README
+- Follow Vim help conventions (tags, sections, formatting)
+- Include version requirements
+- Add a license statement
+- List dependencies clearly
+
+## Distribution
+- Use semantic versioning
+- Provide installation instructions for common plugin managers
+- Add a clear changelog
+- Tag releases in Git
+- Include a minimal vimrc for testing
+- Make your plugin `packloadable` (Vim 8+ packages)
+- Keep dependencies minimal and explicit
+
+## Compatibility
+- Document Vim version requirements
+- Use feature detection instead of version checking when possible
+- Support both Vim and Neovim where feasible
+- Provide graceful degradation for missing features
+- Test with different Vim configurations
+
+## Community
+- Include a contributing guide
+- Add an issue template
+- Respond to bug reports promptly
+- Consider user feedback for improvements
+- Document breaking changes clearly
+- Follow Vim conventions to meet user expectations 
