@@ -36,4 +36,4 @@ jobs:
           set rtp+=after
           filetype plugin indent on
           syntax enable
-          EOF) -c 'Vader! test/**/*.vader'
+          EOF) -c 'Vader! test/**/*.vader' || exit $?
