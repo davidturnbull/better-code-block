@@ -847,7 +847,7 @@ function! s:detect_language(fence_line)
   endif
   
   " Pattern 3: Handle weird fence case
-  if a:fence_line =~# '`````\s\+weird' || a:fence_line =~# '````` weird fence'
+  if a:fence_line =~# '`````\s\+weird' || a:fence_line =~# '````` weird fence' || a:fence_line =~# '````` weird'
     call s:debug_message("Detected weird fence pattern, returning empty string")
     return ''
   endif
