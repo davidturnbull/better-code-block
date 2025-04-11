@@ -7,6 +7,11 @@ if exists('b:loaded_fenced_code_block')
 endif
 let b:loaded_fenced_code_block = 1
 
+" Make sure required global variables are defined
+if !exists('g:fenced_code_block_update_delay')
+  let g:fenced_code_block_update_delay = 0
+endif
+
 " Initialize buffer-specific variables
 let b:highlighting_enabled = 1
 

@@ -57,11 +57,11 @@ function! s:load_syntax_for(lang)
 endfunction
 
 " Load syntax for all supported languages
-function! fenced_code_block#load_all_syntaxes()
+function! s:load_all_syntaxes()
   for [lang, _] in items(s:supported_languages)
     call s:load_syntax_for(lang)
   endfor
 endfunction
 
 " Initialize syntax loading
-call fenced_code_block#load_all_syntaxes() 
+call s:load_all_syntaxes() 

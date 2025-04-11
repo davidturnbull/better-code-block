@@ -437,6 +437,11 @@ endfunction
 
 " Determine the best line number method based on configuration and capabilities
 function! s:determine_line_number_method()
+  " Set default if not defined
+  if !exists('g:fenced_code_block_line_number_method')
+    let g:fenced_code_block_line_number_method = 'auto'
+  endif
+
   let method = g:fenced_code_block_line_number_method
   
   " If auto, select best available method
@@ -1029,4 +1034,15 @@ endfunction
 " Expose get_range_lines for testing
 function! fenced_code_block#test_get_range_lines(start, end)
   return s:get_range_lines(a:start, a:end)
+endfunction
+
+" Load all syntaxes for supported languages
+function! fenced_code_block#load_all_syntaxes()
+  " This function should call into the actual implementation in markdown_fenced_languages.vim
+  if exists('*s:load_all_syntaxes')
+    call s:load_all_syntaxes()
+  else
+    " Try to source the syntax file if the function doesn't exist
+    runtime syntax/markdown_fenced_languages.vim
+  endif
 endfunction
