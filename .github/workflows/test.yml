@@ -28,10 +28,12 @@ jobs:
       - name: Run tests
         run: |
           cd fenced-code-block
-          # Create a script to run tests and capture exit code
+          # Create a script to run tests with timeout
           cat > run_test.sh << 'SCRIPT'
           #!/bin/bash
-          vim -Nu <(cat << EOF
+          set -e
+          # Run Vim with Vader tests and timeout after 60 seconds
+          timeout 60s vim -Nu <(cat << EOF
           set nocompatible
           filetype off
           set rtp+=../vader.vim
@@ -40,7 +42,9 @@ jobs:
           filetype plugin indent on
           syntax enable
           EOF) -c 'Vader! test/**/*.vader'
-          exit $?
+          exit_code=$?
+          echo "Vim exited with code: $exit_code"
+          exit $exit_code
           SCRIPT
           chmod +x run_test.sh
           ./run_test.sh
