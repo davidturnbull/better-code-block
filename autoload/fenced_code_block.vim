@@ -247,6 +247,36 @@ function! fenced_code_block#parse_start_value(start_spec)
     return 1  " Default start value if not specified
   endif
   
+  " Check for negative start value
+  if a:start_spec =~# '^-\d\+$'
+    " Found a negative number, mark it for error highlighting
+    if !exists('b:mch_negative_start_values')
+      let b:mch_negative_start_values = []
+    endif
+    call add(b:mch_negative_start_values, a:start_spec)
+    call s:debug_message("Detected negative start value: " . a:start_spec)
+    
+    " Set the error flag directly
+    let b:mch_has_errors = 1
+    
+    return 1  " Return default value for negative input
+  endif
+  
+  " Check for non-numeric value
+  if a:start_spec !~# '^\d\+$'
+    " Found a non-numeric value, mark it for error highlighting
+    if !exists('b:mch_invalid_start_values')
+      let b:mch_invalid_start_values = []
+    endif
+    call add(b:mch_invalid_start_values, a:start_spec)
+    call s:debug_message("Detected invalid start value: " . a:start_spec)
+    
+    " Set the error flag directly
+    let b:mch_has_errors = 1
+    
+    return 1  " Return default value for invalid input
+  endif
+  
   let num = str2nr(a:start_spec)
   call s:debug_message("Parsed start value: " . num)
   return num
@@ -403,6 +433,18 @@ function! fenced_code_block#do_apply_highlighting()
     if exists('b:mch_negative_values') && !empty(b:mch_negative_values)
       call s:highlight_negative_values(b:current_fence_line, b:mch_negative_values)
       let b:mch_negative_values = []  " Clear after processing
+    endif
+    
+    " Handle any stored negative start values for this fence line
+    if exists('b:mch_negative_start_values') && !empty(b:mch_negative_start_values)
+      call s:highlight_invalid_start_value(b:current_fence_line, b:mch_negative_start_values, '-')
+      let b:mch_negative_start_values = []  " Clear after processing
+    endif
+    
+    " Handle any stored invalid start values for this fence line
+    if exists('b:mch_invalid_start_values') && !empty(b:mch_invalid_start_values)
+      call s:highlight_invalid_start_value(b:current_fence_line, b:mch_invalid_start_values, 'invalid')
+      let b:mch_invalid_start_values = []  " Clear after processing
     endif
     
     " Also highlight any directly detected reversed ranges in highlight specs
@@ -790,6 +832,16 @@ function! fenced_code_block#clear_highlights()
   " Clear stored negative values
   if exists('b:mch_negative_values')
     let b:mch_negative_values = []
+  endif
+  
+  " Clear stored negative start values
+  if exists('b:mch_negative_start_values')
+    let b:mch_negative_start_values = []
+  endif
+  
+  " Clear stored invalid start values
+  if exists('b:mch_invalid_start_values')
+    let b:mch_invalid_start_values = []
   endif
   
   " Clear 2match
@@ -1245,4 +1297,78 @@ function! s:highlight_invalid_part(fence_line, highlight_spec, part)
   call add(w:fenced_code_block_error_match_ids, match_id)
   call s:debug_message("Added error highlight for invalid part at line " . a:fence_line . 
         \ ", position " . start_pos . "-" . end_pos . " (part: " . a:part . ")")
+endfunction
+
+" Highlight an invalid start value in the code fence line
+function! s:highlight_invalid_start_value(fence_line, invalid_values, error_type)
+  let line_text = getline(a:fence_line)
+  
+  " Apply error highlight style
+  silent! highlight clear MarkdownCodeHighlightError
+  if g:fenced_code_block_error_style == 'red'
+    highlight MarkdownCodeHighlightError ctermbg=red ctermfg=white guibg=#FF0000 guifg=#FFFFFF
+  elseif g:fenced_code_block_error_style == 'reverse'
+    highlight MarkdownCodeHighlightError cterm=reverse,bold gui=reverse,bold
+  else
+    " Default fallback - DiffDelete is usually red in most colorschemes
+    highlight link MarkdownCodeHighlightError DiffDelete
+  endif
+  
+  " Find all start specification parts
+  let keywords = [g:fenced_code_block_start_keyword] + g:fenced_code_block_start_keyword_aliases
+  let keyword_pattern = '\<\('
+  
+  let first = 1
+  for keyword in keywords
+    if !first
+      let keyword_pattern .= '\|'
+    endif
+    let keyword_pattern .= keyword
+    let first = 0
+  endfor
+  
+  let keyword_pattern .= '\)=\([''"]\?\)\([^''"]*\)\2'
+  
+  let matches = matchlist(line_text, keyword_pattern)
+  if !empty(matches)
+    let start_spec = matches[3]
+    let start_idx = stridx(line_text, start_spec)
+    
+    if start_idx != -1
+      " Store match id for cleanup
+      if !exists('w:fenced_code_block_error_match_ids')
+        let w:fenced_code_block_error_match_ids = []
+      endif
+      
+      if a:error_type == '-'
+        " Highlight negative values
+        for invalid_value in a:invalid_values
+          let pos = matchstrpos(start_spec, invalid_value)
+          if pos[1] != -1
+            let error_start = start_idx + pos[1]
+            let error_end = start_idx + pos[2]
+            let match_id = matchadd('MarkdownCodeHighlightError', 
+                  \ '\%' . a:fence_line . 'l\%>' . error_start . 'c\%<' . (error_end + 1) . 'c')
+            call add(w:fenced_code_block_error_match_ids, match_id)
+            call s:debug_message("Added error highlight for negative start value at line " . a:fence_line . 
+                  \ ", position " . error_start . "-" . error_end . " (value: " . invalid_value . ")")
+          endif
+        endfor
+      else
+        " Highlight non-numeric values
+        for invalid_value in a:invalid_values
+          let pos = matchstrpos(start_spec, invalid_value)
+          if pos[1] != -1
+            let error_start = start_idx + pos[1]
+            let error_end = start_idx + pos[2]
+            let match_id = matchadd('MarkdownCodeHighlightError', 
+                  \ '\%' . a:fence_line . 'l\%>' . error_start . 'c\%<' . (error_end + 1) . 'c')
+            call add(w:fenced_code_block_error_match_ids, match_id)
+            call s:debug_message("Added error highlight for invalid start value at line " . a:fence_line . 
+                  \ ", position " . error_start . "-" . error_end . " (value: " . invalid_value . ")")
+          endif
+        endfor
+      endif
+    endif
+  endif
 endfunction
