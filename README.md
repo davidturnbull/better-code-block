@@ -71,26 +71,94 @@ This will apply the configured highlight style to line 2 and lines 4 through 5 o
 
 ## Configuration
 
-Configure the plugin by setting the following global variables in your `vimrc` or `init.vim`/`init.lua`.
+Configure the plugin by setting various global variables in your vim configuration file (vimrc, init.vim, or init.lua). Below are the available configuration options along with examples:
 
-| Variable                                     | Default                           | Description                                                                                                                                                             |
-| :------------------------------------------- | :-------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `g:better_code_blocks_style`                 | `'green'`                         | Default highlight style. See built-in styles below or register custom ones.                                                                                             |
-| `g:better_code_blocks_custom`                | `{}`                              | Dictionary for storing definition of custom highlight styles.                                                                                                           |
-| `g:better_code_blocks_debug`                 | `0`                               | Set to `1` to enable debug messages.                                                                                                                                    |
-| `g:better_code_blocks_extensions`            | `['md', 'markdown', 'txt']`       | List of file extensions where the plugin should be active.                                                                                                              |
-| `g:better_code_blocks_keyword`               | `'highlight'`                     | The primary keyword to look for in the fence line.                                                                                                                      |
-| `g:better_code_blocks_keyword_aliases`       | `['hl', 'mark', 'emphasize']`     | Alternative keywords that trigger highlighting.                                                                                                                         |
-| `g:better_code_blocks_start_keyword`         | `'start'`                         | The primary keyword for setting the starting line number.                                                                                                               |
-| `g:better_code_blocks_start_keyword_aliases` | `['from', 'begin']`               | Alternative keywords for setting the starting line number.                                                                                                              |
-| `g:better_code_blocks_show_line_numbers`     | `1`                               | Controls relative line numbers in code blocks. Values: `1` or `'always'` (always show), `0` or `'never'` (never show), `'with_highlights'` (only show with highlights). |
-| `g:better_code_blocks_line_number_method`    | `'auto'`                          | Method for displaying line numbers: `'nvim'` (virtual text), `'prop'` (text properties), `'sign'` (sign column), `'auto'` (best available).                             |
-| `g:better_code_blocks_line_number_format`    | `' %d '`                          | Format string for line numbers (`%d` is the line number).                                                                                                               |
-| `g:better_code_blocks_line_number_style`     | `'LineNr'`                        | Highlight group used for the line numbers.                                                                                                                              |
-| `g:better_code_blocks_error_style`           | `'red'`                           | Style used to indicate errors (e.g., invalid line numbers).                                                                                                             |
-| `g:better_code_blocks_update_delay`          | `0`                               | Delay (in milliseconds) before updating highlights after changes (0=immediate).                                                                                         |
-| `g:better_code_blocks_fence_patterns`        | `['^\(`\{3,}\)', '^\(\~\{3,}\)']` | List of Vim regex patterns to detect fence lines. Must capture the fence chars.                                                                                         |
-| `g:better_code_blocks_method`                | `'background'`                    | Highlighting method: `'background'`, `'foreground'`, `'underline'`, `'undercurl'`, `'bold'`, `'italic'`, `'reverse'`.                                                   |
+- g:better_code_blocks_style (default: 'green')
+  This variable sets the default highlight style. Built-in styles include 'green', 'blue', 'yellow', 'cyan', 'magenta', 'invert', 'bold', 'italic', 'underline', and 'undercurl'.
+  Example:
+      let g:better_code_blocks_style = 'blue'
+
+- g:better_code_blocks_custom (default: {})
+  Use this dictionary to register custom styles.
+  Example:
+      call BetterCodeBlocksRegisterStyle('my_cyan', 'ctermbg=cyan', 'guibg=#00FFFF', 'cterm=bold', 'gui=bold')
+      let g:better_code_blocks_style = 'my_cyan'
+
+- g:better_code_blocks_debug (default: 0)
+  Enable debug messages by setting this to 1.
+  Example:
+      let g:better_code_blocks_debug = 1
+
+- g:better_code_blocks_extensions (default: ['md', 'markdown', 'txt'])
+  Specifies the file extensions on which the plugin is active.
+  Example:
+      let g:better_code_blocks_extensions = ['md']
+
+- g:better_code_blocks_keyword (default: 'highlight')
+  Defines the primary keyword to trigger highlighting in fenced code blocks.
+  Example:
+      let g:better_code_blocks_keyword = 'highlight'
+
+- g:better_code_blocks_keyword_aliases (default: ['hl', 'mark', 'emphasize'])
+  Alternative keywords for triggering highlights.
+  Example:
+      let g:better_code_blocks_keyword_aliases = ['hl', 'mark']
+
+- g:better_code_blocks_start_keyword (default: 'start')
+  Primary keyword for setting the starting line number.
+  Example:
+      let g:better_code_blocks_start_keyword = 'start'
+
+- g:better_code_blocks_start_keyword_aliases (default: ['from', 'begin'])
+  Alternative keywords for defining the starting line number.
+  Example:
+      let g:better_code_blocks_start_keyword_aliases = ['from']
+
+- g:better_code_blocks_show_line_numbers (default: 1)
+  Controls the display of line numbers within code blocks.
+  Allowed values:
+    1 or 'always'       – always show line numbers.
+    0 or 'never'        – never show line numbers.
+    'with_highlights'   – show only when highlights are applied.
+  Example:
+      let g:better_code_blocks_show_line_numbers = 'with_highlights'
+
+- g:better_code_blocks_line_number_method (default: 'auto')
+  Selects the method for displaying line numbers. Options include 'nvim' (virtual text), 'prop' (text properties), 'sign' (sign column), or 'auto' (to choose the best available).
+  Example:
+      let g:better_code_blocks_line_number_method = 'nvim'
+
+- g:better_code_blocks_line_number_format (default: ' %d ')
+  Format string for line numbers, where %d is replaced by the actual line number.
+  Example:
+      let g:better_code_blocks_line_number_format = ' %d '
+
+- g:better_code_blocks_line_number_style (default: 'LineNr')
+  The highlight group used for line numbers.
+  Example:
+      let g:better_code_blocks_line_number_style = 'LineNr'
+
+- g:better_code_blocks_error_style (default: 'red')
+  Specifies the style used to indicate errors (e.g., invalid line numbers).
+  Example:
+      let g:better_code_blocks_error_style = 'red'
+
+- g:better_code_blocks_update_delay (default: 0)
+  Delay in milliseconds before updating highlights after changes.
+  Example:
+      let g:better_code_blocks_update_delay = 0
+
+- g:better_code_blocks_fence_patterns (default: ['^\(\{3,}\)', '^\(\~\{3,}\)'])
+  Vim regex patterns used to detect fence lines (must capture the fence characters).
+  Example:
+      let g:better_code_blocks_fence_patterns = ['^\(\{3,}\)', '^\(\~\{3,}\)']
+
+- g:better_code_blocks_method (default: 'background')
+  Determines the highlighting method. Options include 'background', 'foreground', 'underline', 'undercurl', 'bold', 'italic', and 'reverse'.
+  Example:
+      let g:better_code_blocks_method = 'underline'
+
+Built-in styles available: 'green', 'blue', 'yellow', 'cyan', 'magenta', 'invert', 'bold', 'italic', 'underline', 'undercurl'
 
 **Built-in Styles:** `'green'`, `'blue'`, `'yellow'`, `'cyan'`, `'magenta'`, `'invert'`, `'bold'`, `'italic'`, `'underline'`, `'undercurl'`
 
