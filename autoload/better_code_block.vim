@@ -506,15 +506,17 @@ function! s:highlight_invalid_spec(fence_line, invalid_nums)
   else
     highlight link MarkdownCodeHighlightError DiffDelete
   endif
-  let keyword_pattern = '\<\(' . g:better_code_block_keyword
-  for alias in g:better_code_block_keyword_aliases
-    let keyword_pattern .= '\|' . alias
-  endfor
-  let keyword_pattern .= '\)=\([''"]\?\)\([^''"]*\)\2'
-  let matches = matchlist(line_text, keyword_pattern)
-  if !empty(matches)
-    let highlight_spec = matches[3]
-    let start_idx = stridx(line_text, highlight_spec)
+  " Use refined pattern with \zs and \ze to accurately capture the highlight spec value.
+  let pattern_with_quotes = '\<\(' . g:better_code_block_keyword . '\|' . join(g:better_code_block_keyword_aliases, '\|') . '\)=\(["'']\)\zs.\{-}\ze\2'
+  let mres = matchstrpos(line_text, pattern_with_quotes)
+  if mres[0] == ""
+    " Fallback for unquoted highlight attribute.
+    let pattern_unquoted = '\<\(' . g:better_code_block_keyword . '\|' . join(g:better_code_block_keyword_aliases, '\|') . '\)=\zs[0-9,\s\-]\+'
+    let mres = matchstrpos(line_text, pattern_unquoted)
+  endif
+  if mres[0] != ""
+    let highlight_spec = mres[0]
+    let start_idx = mres[1]
     if start_idx != -1
       if !exists('w:better_code_block_error_match_ids')
         let w:better_code_block_error_match_ids = []
