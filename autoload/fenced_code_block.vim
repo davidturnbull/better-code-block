@@ -86,6 +86,15 @@ endfunction
 " Helper function to match keyword with quotes
 function! s:match_keyword_with_quotes(line, keyword, quote_char)
   let escaped_quote = (a:quote_char == '"') ? '\"' : "'"
+  " First try with space after the keyword=
+  let pattern = a:keyword . '\s*=\s*' . a:quote_char . '\([^' . escaped_quote . ']*\)' . a:quote_char
+  let matches = matchlist(a:line, pattern)
+  
+  if !empty(matches)
+    return trim(matches[1])
+  endif
+  
+  " Also try without space
   let pattern = a:keyword . '=' . a:quote_char . '\([^' . escaped_quote . ']*\)' . a:quote_char
   let matches = matchlist(a:line, pattern)
   
@@ -153,10 +162,12 @@ function! s:parse_range(part)
       " Set the error flag directly 
       let b:mch_has_errors = 1
       
-      " Since we're returning an empty array, manually highlight the error
-      if exists('b:current_fence_line') && b:current_fence_line > 0
-        call s:highlight_invalid_spec(b:current_fence_line, [start, end])
+      " Store the reversed range for later highlighting when b:current_fence_line is available
+      if !exists('b:mch_reversed_ranges')
+        let b:mch_reversed_ranges = []
       endif
+      call add(b:mch_reversed_ranges, [start, end, a:part])
+      call s:debug_message("Stored reversed range for later highlighting: " . start . "-" . end)
       
       return []
     endif
@@ -348,6 +359,15 @@ function! fenced_code_block#do_apply_highlighting()
     
     " Store the current fence line for error highlighting
     let b:current_fence_line = code_block_start
+    
+    " Handle any stored reversed ranges for this fence line
+    if exists('b:mch_reversed_ranges') && !empty(b:mch_reversed_ranges)
+      for range_info in b:mch_reversed_ranges
+        call s:highlight_invalid_spec(b:current_fence_line, [range_info[0], range_info[1]])
+        call s:debug_message("Applied delayed highlighting for reversed range: " . range_info[0] . "-" . range_info[1] . " at line " . b:current_fence_line)
+      endfor
+      let b:mch_reversed_ranges = []  " Clear after processing
+    endif
     
     " Validate line numbers now that we know the total code block size
     if !empty(lines_to_highlight)
@@ -593,7 +613,24 @@ function! s:highlight_invalid_spec(fence_line, invalid_nums)
           if next_index < len(a:invalid_nums)
             let next_num = a:invalid_nums[next_index]
             if invalid_num > next_num
-              call add(patterns, '\<' . invalid_num . '\s*-\s*' . next_num . '\>')
+              " This is more specific for reversed ranges
+              let rev_pattern = '\<' . invalid_num . '\s*-\s*' . next_num . '\>'
+              call add(patterns, rev_pattern)
+              
+              " Find the reversed range in the highlight_spec
+              let pos = matchstrpos(highlight_spec, rev_pattern)
+              if pos[1] != -1
+                let error_start = start_idx + pos[1]
+                let error_end = start_idx + pos[2]
+                let match_id = matchadd('MarkdownCodeHighlightError', 
+                      \ '\%' . a:fence_line . 'l\%>' . error_start . 'c\%<' . (error_end + 1) . 'c')
+                call add(w:fenced_code_block_error_match_ids, match_id)
+                call s:debug_message("Added error highlight for reversed range " . a:fence_line . 
+                      \ ", position " . error_start . "-" . error_end . " (" . invalid_num . "-" . next_num . ")")
+                
+                " Continue to next invalid number, we've handled this reversed range already
+                continue
+              endif
             endif
           endif
         endif
@@ -688,6 +725,11 @@ function! fenced_code_block#clear_highlights()
     endfor
   endif
   let w:fenced_code_block_error_match_ids = []
+  
+  " Clear stored reversed ranges
+  if exists('b:mch_reversed_ranges')
+    let b:mch_reversed_ranges = []
+  endif
   
   " Clear 2match
   2match none
