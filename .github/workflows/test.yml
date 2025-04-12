@@ -28,23 +28,6 @@ jobs:
       - name: Run tests
         run: |
           cd better-code-block
-          # Create a script to run tests with headless Vim
-          cat > run_test.sh << 'SCRIPT'
-          #!/bin/bash
-          set -e
-          # Run Vim with Vader tests in headless mode with timeout
-          timeout 60s vim -es -Nu <(cat << EOF
-          set nocompatible
-          filetype off
-          set rtp+=../vader.vim
-          set rtp+=.
-          set rtp+=after
-          filetype plugin indent on
-          syntax enable
-          EOF) -c 'Vader! test/**/*.vader' -c 'qall!'
-          exit_code=$?
-          echo "Vim exited with code: $exit_code"
-          exit $exit_code
-          SCRIPT
-          chmod +x run_test.sh
-          ./run_test.sh
+          chmod +x run_tests.sh
+          # Use timeout in CI environment to prevent hung tests
+          timeout 60s ./run_tests.sh
