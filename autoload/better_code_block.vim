@@ -156,10 +156,6 @@ function! s:ParseSingleLineNumber(part) abort
   return s:ParsePositiveInteger(a:part)
 endfunction
 
-function! s:get_range_lines(start, end)
-  return s:GetRangeLines(a:start, a:end)
-endfunction
-
 " Parse a single line number
 function! s:parse_single_line(part)
   if a:part =~# '^-\d\+$'
@@ -167,17 +163,17 @@ function! s:parse_single_line(part)
       let b:mch_negative_values = []
     endif
     call add(b:mch_negative_values, a:part)
-    call s:debug_message("Detected negative line number: " . a:part)
+    call s:LogDebug("Detected negative line number: " . a:part)
     let b:mch_has_errors = 1
     return 0
   endif
   if a:part =~# '-'
-    call s:debug_message("Rejected malformed range as single line: " . a:part)
+    call s:LogDebug("Rejected malformed range as single line: " . a:part)
     return 0
   endif
   let num = str2nr(a:part)
   if num > 0
-    call s:debug_message("Added single line " . num)
+    call s:LogDebug("Added single line " . num)
     return num
   endif
   return 0
@@ -193,7 +189,7 @@ function! better_code_block#parse_start_value(start_spec)
       let b:mch_negative_start_values = []
     endif
     call add(b:mch_negative_start_values, a:start_spec)
-    call s:debug_message("Detected negative start value: " . a:start_spec)
+    call s:LogDebug("Detected negative start value: " . a:start_spec)
     let b:mch_has_errors = 1
     return 1
   endif
@@ -202,12 +198,12 @@ function! better_code_block#parse_start_value(start_spec)
       let b:mch_invalid_start_values = []
     endif
     call add(b:mch_invalid_start_values, a:start_spec)
-    call s:debug_message("Detected invalid start value: " . a:start_spec)
+    call s:LogDebug("Detected invalid start value: " . a:start_spec)
     let b:mch_has_errors = 1
     return 1
   endif
   let num = str2nr(a:start_spec)
-  call s:debug_message("Parsed start value: " . num)
+  call s:LogDebug("Parsed start value: " . num)
   return num
 endfunction
 
@@ -235,20 +231,20 @@ function! s:find_code_blocks()
   let current_block = {}
   for line in buffer_text
     let line_num += 1
-    call s:debug_message("Processing line " . line_num . ": " . line)
+    call s:LogDebug("Processing line " . line_num . ": " . line)
     if !in_code_block
       let fence_match = ''
       let fence_pattern = ''
-      call s:debug_message("Checking fence patterns: " . string(g:better_code_block_fence_patterns))
+      call s:LogDebug("Checking fence patterns: " . string(g:better_code_block_fence_patterns))
       for pattern in g:better_code_block_fence_patterns
-        call s:debug_message("Trying pattern: " . pattern . " against line: " . line)
+        call s:LogDebug("Trying pattern: " . pattern . " against line: " . line)
         let matches = matchlist(line, pattern)
         if !empty(matches)
-          call s:debug_message("Got matches: " . string(matches))
+          call s:LogDebug("Got matches: " . string(matches))
           if len(matches) > 1 && !empty(matches[1])
             let fence_match = matches[1]
             let fence_pattern = pattern
-            call s:debug_message("Matched fence pattern: " . pattern . " with fence: " . fence_match)
+            call s:LogDebug("Matched fence pattern: " . pattern . " with fence: " . fence_match)
             break
           endif
         endif
@@ -256,7 +252,7 @@ function! s:find_code_blocks()
       if empty(fence_match) && line =~# '^```'
         let fence_match = '```'
         let fence_pattern = '^```\(.*\)$'
-        call s:debug_message("Special case: matched simple backtick fence")
+        call s:LogDebug("Special case: matched simple backtick fence")
       endif
       if !empty(fence_match)
         let in_code_block = 1
@@ -272,14 +268,14 @@ function! s:find_code_blocks()
         let code_block_lines = 0
         let language = s:detect_language(line)
         let current_block = {'start_line': code_block_start, 'fence_type': fence_type, 'highlight_lines': lines_to_highlight, 'language': language, 'content_lines': [], 'start_value': start_value}
-        call s:debug_message("Found code block at line " . line_num . " with fence: " . fence_type . ", highlight lines: " . string(lines_to_highlight))
+        call s:LogDebug("Found code block at line " . line_num . " with fence: " . fence_type . ", highlight lines: " . string(lines_to_highlight))
         continue
       endif
     endif
     if in_code_block
       if fence_type ==# '```' && line =~# '^```\s*$'
         let is_fence_end = 1
-        call s:debug_message("Special case: matched simple backtick fence end: " . line)
+        call s:LogDebug("Special case: matched simple backtick fence end: " . line)
       else
         let is_fence_end = line ==# fence_type || line =~# '^' . escape(fence_type, '\.^$*[]') . '\s*$'
       endif
@@ -288,7 +284,7 @@ function! s:find_code_blocks()
         let current_block['line_count'] = code_block_lines
         call add(code_blocks, current_block)
         let in_code_block = 0
-        call s:debug_message("Code block ended at line " . line_num . " with fence: " . fence_type . ", added block to list, now have " . len(code_blocks) . " blocks")
+        call s:LogDebug("Code block ended at line " . line_num . " with fence: " . fence_type . ", added block to list, now have " . len(code_blocks) . " blocks")
         continue
       endif
     endif
@@ -313,7 +309,7 @@ function! better_code_block#do_apply_highlighting()
     if exists('b:mch_reversed_ranges') && !empty(b:mch_reversed_ranges)
       for range_info in b:mch_reversed_ranges
         call s:highlight_invalid_spec(b:mch_current_fence_line, [range_info[0], range_info[1]])
-        call s:debug_message("Applied delayed highlighting for reversed range: " . range_info[0] . "-" . range_info[1] . " at line " . b:mch_current_fence_line)
+        call s:LogDebug("Applied delayed highlighting for reversed range: " . range_info[0] . "-" . range_info[1] . " at line " . b:mch_current_fence_line)
       endfor
       let b:mch_reversed_ranges = []
     endif
@@ -367,14 +363,14 @@ function! better_code_block#do_apply_highlighting()
               call add(adjusted_lines_to_highlight, hl_line)
             endif
           endfor
-          call s:debug_message("Adjusted highlight lines for start value " . start_value . ": " . string(lines_to_highlight) . " -> " . string(adjusted_lines_to_highlight))
+          call s:LogDebug("Adjusted highlight lines for start value " . start_value . ": " . string(lines_to_highlight) . " -> " . string(adjusted_lines_to_highlight))
         else
           let adjusted_lines_to_highlight = lines_to_highlight
         endif
         
         if index(adjusted_lines_to_highlight, relative_line) >= 0
           call s:highlight_line(line_num)
-          call s:debug_message("Highlighted line " . line_num . " (relative line " . relative_line . ")")
+          call s:LogDebug("Highlighted line " . line_num . " (relative line " . relative_line . ")")
         endif
         
         if (type(g:better_code_block_show_line_numbers) == v:t_number && g:better_code_block_show_line_numbers) || g:better_code_block_show_line_numbers == 'always' || (g:better_code_block_show_line_numbers == 'with_highlights' && !empty(lines_to_highlight))
@@ -418,11 +414,6 @@ function! s:LogDebug(msg) abort
   if g:better_code_block_debug == 1 || exists('g:vader_file')
     echom "[BCB] " . a:msg
   endif
-endfunction
-
-" Alias for compatibility
-function! s:debug_message(msg) abort
-  call s:LogDebug(a:msg)
 endfunction
 
 " Place line number using configured method
@@ -515,7 +506,7 @@ function! s:validate_highlight_lines(lines_to_highlight, code_block_lines, code_
       continue
     endif
     if line_num <= 0 || line_num > a:code_block_lines
-      call s:debug_message("Invalid line number: " . line_num . " (code block has " . a:code_block_lines . " lines)")
+      call s:LogDebug("Invalid line number: " . line_num . " (code block has " . a:code_block_lines . " lines)")
       let has_invalid_lines = 1
       call add(invalid_numbers, line_num)
     endif
@@ -569,7 +560,7 @@ function! s:highlight_invalid_spec(fence_line, invalid_nums)
                 let error_end = start_idx + pos[2]
                 let match_id = matchadd('MarkdownCodeHighlightError', '\%' . a:fence_line . 'l\%>' . error_start . 'c\%<' . (error_end + 1) . 'c')
                 call add(w:better_code_block_error_match_ids, match_id)
-                call s:debug_message("Added error highlight for reversed range " . a:fence_line . ", position " . error_start . "-" . error_end . " (" . invalid_num . "-" . next_num . ")")
+                call s:LogDebug("Added error highlight for reversed range " . a:fence_line . ", position " . error_start . "-" . error_end . " (" . invalid_num . "-" . next_num . ")")
                 continue
               endif
             endif
@@ -582,7 +573,7 @@ function! s:highlight_invalid_spec(fence_line, invalid_nums)
             let error_end = start_idx + pos[2]
             let match_id = matchadd('MarkdownCodeHighlightError', '\%' . a:fence_line . 'l\%>' . error_start . 'c\%<' . (error_end + 1) . 'c')
             call add(w:better_code_block_error_match_ids, match_id)
-            call s:debug_message("Added error highlight for line " . a:fence_line . ", position " . error_start . "-" . error_end . " (invalid number: " . invalid_num . ")")
+            call s:LogDebug("Added error highlight for line " . a:fence_line . ", position " . error_start . "-" . error_end . " (invalid number: " . invalid_num . ")")
           endif
         endfor
       endfor
@@ -837,7 +828,7 @@ endfunction
 " Detect language from fence line
 function! s:detect_language(fence_line)
   if a:fence_line =~# '`````\s\+weird'
-    call s:debug_message("Detected weird fence pattern, returning empty string")
+    call s:LogDebug("Detected weird fence pattern, returning empty string")
     return ''
   endif
   let patterns = [
@@ -863,17 +854,17 @@ function! s:detect_language(fence_line)
       if has_key(language_mappings, lang)
         let lang = language_mappings[lang]
       endif
-      call s:debug_message("Detected language: " . lang . " using pattern: " . pattern)
+      call s:LogDebug("Detected language: " . lang . " using pattern: " . pattern)
       return lang
     endif
   endfor
   let curly_pattern = '```{\(\w\+\)}'
   let matches = matchlist(a:fence_line, curly_pattern)
   if len(matches) > 1 && !empty(matches[1])
-    call s:debug_message("Detected language: " . matches[1] . " using curly brace pattern")
+    call s:LogDebug("Detected language: " . matches[1] . " using curly brace pattern")
     return matches[1]
   endif
-  call s:debug_message("No language detected in fence: " . a:fence_line)
+  call s:LogDebug("No language detected in fence: " . a:fence_line)
   return ''
 endfunction
 
@@ -911,7 +902,7 @@ function! better_code_block#test_find_code_blocks()
 endfunction
 
 function! better_code_block#test_get_range_lines(start, end)
-  return s:get_range_lines(a:start, a:end)
+  return s:GetRangeLines(a:start, a:end)
 endfunction
 
 function! better_code_block#test_parse_single_line(part)
@@ -920,25 +911,6 @@ endfunction
 
 function! better_code_block#test_validate_highlight_lines(lines, block_size, start_line)
   return s:validate_highlight_lines(a:lines, a:block_size, a:start_line)
-endfunction
-
-function! s:enable_line_numbers()
-  set number
-  let method = s:determine_line_number_method()
-  if method == 'sign'
-    set signcolumn=yes
-  endif
-endfunction
-
-function! s:disable_line_numbers()
-  let method = s:determine_line_number_method()
-  if method == 'sign'
-    set signcolumn=auto
-  endif
-endfunction
-
-function! better_code_block#test_get_range_lines(start, end)
-  return s:get_range_lines(a:start, a:end)
 endfunction
 
 function! better_code_block#load_all_syntaxes()
@@ -986,7 +958,7 @@ function! s:highlight_negative_values(fence_line, negative_values)
           let error_end = start_idx + rpos
           let match_id = matchadd('MarkdownCodeHighlightError', '\%' . a:fence_line . 'l\%>' . error_start . 'c\%<' . (error_end + 1) . 'c')
           call add(w:better_code_block_error_match_ids, match_id)
-          call s:debug_message("Added error highlight for negative value at line " . a:fence_line . ", position " . error_start . "-" . error_end . " (negative value: " . negative_value . ")")
+          call s:LogDebug("Added error highlight for negative value at line " . a:fence_line . ", position " . error_start . "-" . error_end . " (negative value: " . negative_value . ")")
           let lpos = rpos + 1
         endif
       endwhile
@@ -1012,7 +984,7 @@ function! s:highlight_invalid_part(fence_line, highlight_spec, part)
   endif
   let match_id = matchadd('MarkdownCodeHighlightError', '\%' . a:fence_line . 'l\%>' . start_pos . 'c\%<' . (end_pos + 1) . 'c')
   call add(w:better_code_block_error_match_ids, match_id)
-  call s:debug_message("Added error highlight for invalid part at line " . a:fence_line . ", position " . start_pos . "-" . end_pos . " (part: " . a:part . ")")
+  call s:LogDebug("Added error highlight for invalid part at line " . a:fence_line . ", position " . start_pos . "-" . end_pos . " (part: " . a:part . ")")
 endfunction
 
 " Highlight an invalid start value in the code fence line
@@ -1053,7 +1025,7 @@ function! s:highlight_invalid_start_value(fence_line, invalid_values, error_type
             let error_end = start_idx + pos[2]
             let match_id = matchadd('MarkdownCodeHighlightError', '\%' . a:fence_line . 'l\%>' . error_start . 'c\%<' . (error_end + 1) . 'c')
             call add(w:better_code_block_error_match_ids, match_id)
-            call s:debug_message("Added error highlight for negative start value at line " . a:fence_line . ", position " . error_start . "-" . error_end . " (value: " . invalid_value . ")")
+            call s:LogDebug("Added error highlight for negative start value at line " . a:fence_line . ", position " . error_start . "-" . error_end . " (value: " . invalid_value . ")")
           endif
         endfor
       else
@@ -1064,7 +1036,7 @@ function! s:highlight_invalid_start_value(fence_line, invalid_values, error_type
             let error_end = start_idx + pos[2]
             let match_id = matchadd('MarkdownCodeHighlightError', '\%' . a:fence_line . 'l\%>' . error_start . 'c\%<' . (error_end + 1) . 'c')
             call add(w:better_code_block_error_match_ids, match_id)
-            call s:debug_message("Added error highlight for invalid start value at line " . a:fence_line . ", position " . error_start . "-" . error_end . " (value: " . invalid_value . ")")
+            call s:LogDebug("Added error highlight for invalid start value at line " . a:fence_line . ", position " . error_start . "-" . error_end . " (value: " . invalid_value . ")")
           endif
         endfor
       endif
