@@ -1,4 +1,4 @@
-# fenced-code-block
+# better-code-blocks
 
 Enhances syntax highlighting within fenced code blocks in Markdown (and other supported files) by allowing specific lines to be highlighted. This is particularly useful for documentation, tutorials, and presentations where drawing attention to specific parts of code examples is necessary.
 
@@ -21,28 +21,28 @@ Use your preferred Vim/Neovim plugin manager:
 **vim-plug:**
 
 ```vim
-Plug 'davidturnbull/fenced-code-block'
+Plug 'davidturnbull/better-code-blocks'
 ```
 
 **Vundle:**
 
 ```vim
-Plugin 'davidturnbull/fenced-code-block'
+Plugin 'davidturnbull/better-code-blocks'
 ```
 
 **Packer.nvim:**
 
 ```lua
-use 'davidturnbull/fenced-code-block'
+use 'davidturnbull/better-code-blocks'
 ```
 
 **lazy.nvim:**
 
 ```lua
-{ 'davidturnbull/fenced-code-block', ft = { "markdown", "txt" } } -- Adjust ft as needed
+{ 'davidturnbull/better-code-blocks', ft = { "markdown", "txt" } } -- Adjust ft as needed
 ```
 
-Remember to replace `'davidturnbull/fenced-code-block'` with the actual repository path once published. Then run the appropriate install command (e.g., `:PlugInstall`, `:PluginInstall`).
+Remember to replace `'davidturnbull/better-code-blocks'` with the actual repository path once published. Then run the appropriate install command (e.g., `:PlugInstall`, `:PluginInstall`).
 
 ## Usage
 

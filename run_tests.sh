@@ -8,6 +8,7 @@
 
 # Set script to exit on error
 set -e
+cd better-code-blocks
 
 # Check if Vader.vim exists
 if [ ! -d "../vader.vim" ]; then

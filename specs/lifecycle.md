@@ -1,4 +1,4 @@
-# Better Fenced Code Block - Lifecycle
+# Better Code Blocks - Lifecycle
 
 This document describes the lifecycle of the Better Fenced Code Block plugin, from initialization to cleanup, explaining how the plugin operates during different phases of Vim usage.
 

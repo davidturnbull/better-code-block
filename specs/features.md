@@ -1,4 +1,4 @@
-# Better Fenced Code Block - Features
+# Better Code Blocks - Features
 
 This document provides a detailed exploration of the features offered by the Better Fenced Code Block plugin, explaining how each feature works and how users can configure it.
 

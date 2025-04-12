@@ -1,0 +1,73 @@
+*better-code-blocks.txt*  Improved highlighting for code blocks
+
+===============================================================================
+CONTENTS                                        *better-code-blocks-contents*
+
+    1. Introduction .................. |better-code-blocks-introduction|
+    2. Usage ........................ |better-code-blocks-usage|
+    3. Configuration ................ |better-code-blocks-config|
+    4. Commands ..................... |better-code-blocks-commands|
+    5. Mappings ..................... |better-code-blocks-mappings|
+    6. License ...................... |better-code-blocks-license|
+
+===============================================================================
+1. INTRODUCTION                              *better-code-blocks-introduction*
+
+Better Code Blocks is a plugin that enhances syntax highlighting in
+Markdown code blocks by allowing you to highlight specific lines. This is
+particularly useful when explaining code examples, where you want to draw
+attention to certain important lines.
+
+Key features:
+- Highlight specific lines within code blocks
+- Support for numerous programming languages
+- Multiple highlighting styles (colors, bold, italic, etc.)
+- Line numbering within code blocks
+- Configurable options for appearance and behavior
+- Recognizes common language identifiers (like `python`, `js`, `mdx`, etc.)
+
+===============================================================================
+2. USAGE                                          *better-code-blocks-usage*
+
+This plugin is automatically activated when editing Markdown files. It detects
+code blocks marked with triple backticks (```) and applies highlighting
+based on the specified attributes.
+
+To highlight specific lines, add a highlight attribute to your code fence:
+
+Example markdown with highlighted lines:
+>
+    # Example
+    
+    ```python highlight="1-3,5"
+    def hello_world():
+        print("Hello, world!")
+        return True
+        
+    if __name__ == "__main__":
+        hello_world()
+    ```
+<
+
+This will highlight lines 1-3 and line 5 within the code block.
+
+The highlight attribute supports multiple formats:
+- Single line: highlight="3"
+- Multiple lines: highlight="1,3,5"
+- Line ranges: highlight="1-3"
+- Mixed: highlight="1-3,5,7-9"
+
+
+Line numbering can start from a different value using the start attribute:
+- Start from line 5: start="5"
+- Example: ```python highlight="1-3" start="5" (highlights lines 1-3, numbering starts at 5)
+
+Alternative keywords:
+- You can also use "hl", "mark", or "emphasize" instead of "highlight"
+- You can also use "from" or "begin" instead of "start"
+- Example: ```python hl="1-3" from="10"
+
+===============================================================================
+3. CONFIGURATION                                *better-code-blocks-config*
+
+... (rest of the documentation updated accordingly) ...

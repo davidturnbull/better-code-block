@@ -1,4 +1,4 @@
-# Better Fenced Code Block - Architecture
+# Better Code Blocks - Architecture
 
 This document outlines the architectural design of the Better Fenced Code Block plugin, explaining how its components interact to provide enhanced code block highlighting in Markdown files.
 
@@ -7,7 +7,7 @@ This document outlines the architectural design of the Better Fenced Code Block 
 The plugin follows a standard Vim plugin structure:
 
 ```
-better-fenced-code-block/
+better-better-code-blocks/
 ├── autoload/
 │   └── fenced_code_block.vim    # Core functionality implementation
 ├── plugin/
@@ -21,7 +21,7 @@ better-fenced-code-block/
 │   ├── highlighting.vader       # Tests for highlighting functionality
 │   └── minimal_vimrc            # Minimal configuration for tests
 ├── doc/
-│   └── fenced-code-block.txt    # Help documentation
+│   └── better-code-blocks.txt    # Help documentation
 └── README.md                    # User documentation
 ```
 
