@@ -159,16 +159,6 @@ endfunction
 function! s:get_range_lines(start, end)
   return s:GetRangeLines(a:start, a:end)
 endfunction
-  let lines = []
-  if a:end < a:start
-    call s:debug_message("Invalid range: end (" . a:end . ") is less than start (" . a:start . ")")
-    return []
-  endif
-  for i in range(a:start, a:end)
-    call add(lines, i)
-  endfor
-  return lines
-endfunction
 
 " Parse a single line number
 function! s:parse_single_line(part)
@@ -428,6 +418,11 @@ function! s:LogDebug(msg) abort
   if g:better_code_block_debug == 1 || exists('g:vader_file')
     echom "[BCB] " . a:msg
   endif
+endfunction
+
+" Alias for compatibility
+function! s:debug_message(msg) abort
+  call s:LogDebug(a:msg)
 endfunction
 
 " Place line number using configured method
