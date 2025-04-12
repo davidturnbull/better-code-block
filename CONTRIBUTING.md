@@ -1,4 +1,4 @@
-# Contributing to better-code-blocks
+# Contributing to better-code-block
 
 Thank you for your interest in contributing to this plugin! Here's how you can help.
 
@@ -7,8 +7,8 @@ Thank you for your interest in contributing to this plugin! Here's how you can h
 1. Fork and clone the repository:
 
    ```bash
-   git clone https://github.com/YOUR-USERNAME/better-code-blocks.git
-   cd better-code-blocks
+   git clone https://github.com/YOUR-USERNAME/better-code-block.git
+   cd better-code-block
    ```
 
 2. Set up your development environment:

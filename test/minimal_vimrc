@@ -28,5 +28,5 @@ set updatetime=300
 set shortmess+=c
 
 " Set plugin variables for testing if needed
-" let g:better_code_blocks_debug = 1
-" let g:better_code_blocks_style = 'green'
+" let g:better_code_block_debug = 1
+" let g:better_code_block_style = 'green'

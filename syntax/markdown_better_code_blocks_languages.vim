@@ -40,7 +40,7 @@ function! s:load_syntax_for(lang)
   let l:syntax_file = 'syntax/' . l:lang_name . '.vim'
   if filereadable($VIMRUNTIME . '/' . l:syntax_file)
     execute 'syntax include @' . l:lang_name . ' ' . l:syntax_file
-    execute 'syntax region betterCodeBlocks' . l:lang_name . ' matchgroup=markdownCodeDelimiter ' .
+    execute 'syntax region BetterCodeBlock' . l:lang_name . ' matchgroup=markdownCodeDelimiter ' .
           \ 'start=/^```\s*' . a:lang . '\s*.*$/ ' .
           \ 'end=/^```\s*$/ ' .
           \ 'keepend contains=@' . l:lang_name . ',MarkdownCodeHighlight'

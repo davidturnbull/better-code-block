@@ -1,6 +1,6 @@
-# better-code-blocks - Features
+# better-code-block - Features
 
-This document provides a detailed exploration of the features offered by the better-code-blocks plugin, explaining how each feature works and how users can configure it.
+This document provides a detailed exploration of the features offered by the better-code-block plugin, explaining how each feature works and how users can configure it.
 
 ## Line Highlighting
 
@@ -37,7 +37,7 @@ For convenience, the plugin supports multiple keywords that trigger highlighting
 - `mark="1-3"` - Alternative alias
 - `emphasize="1-3"` - Alternative alias
 
-These aliases can be configured via `g:better_code_blocks_keyword_aliases`.
+These aliases can be configured via `g:better_code_block_keyword_aliases`.
 
 #### Quote Styles
 
@@ -69,10 +69,10 @@ The plugin offers multiple built-in highlight styles and allows users to create 
 
 #### Custom Styles
 
-Users can register custom highlight styles using the `BetterCodeBlocksRegisterStyle` command:
+Users can register custom highlight styles using the `BetterCodeBlockRegisterStyle` command:
 
 ```vim
-:BetterCodeBlocksRegisterStyle my_style cterm bold ctermfg red guifg #FF0000
+:BetterCodeBlockRegisterStyle my_style cterm bold ctermfg red guifg #FF0000
 ````
 
 This creates a style named `my_style` with the specified attributes.
@@ -82,13 +82,13 @@ This creates a style named `my_style` with the specified attributes.
 The active highlight style can be changed at runtime:
 
 ```vim
-:BetterCodeBlocksStyle blue
+:BetterCodeBlockStyle blue
 ```
 
 Or permanently in the user's vimrc:
 
 ```vim
-let g:better_code_blocks_style = 'blue'
+let g:better_code_block_style = 'blue'
 ```
 
 ## Line Numbering
@@ -103,14 +103,14 @@ The plugin supports three methods for displaying line numbers:
 2. **Vim Text Properties** (`prop`) - Uses Vim's text properties feature (requires Vim 8.1+ with +textprop)
 3. **Sign Column** (`sign`) - Uses Vim's sign column (works in all Vim versions)
 
-The method can be configured via `g:better_code_blocks_line_number_method` or set to `'auto'` to automatically select the best available method.
+The method can be configured via `g:better_code_block_line_number_method` or set to `'auto'` to automatically select the best available method.
 
 ### Line Number Formatting
 
 The format of line numbers can be customized:
 
 ```vim
-let g:better_code_blocks_line_number_format = ' %d '  " Default
+let g:better_code_block_line_number_format = ' %d '  " Default
 ```
 
 The `%d` placeholder is replaced with the actual line number.
@@ -120,13 +120,13 @@ The `%d` placeholder is replaced with the actual line number.
 Line numbers can be toggled on/off at runtime:
 
 ```vim
-:BetterCodeBlocksToggleLineNumbers
+:BetterCodeBlockToggleLineNumbers
 ```
 
 Or disabled permanently in the user's vimrc:
 
 ```vim
-let g:better_code_blocks_show_line_numbers = 0
+let g:better_code_block_show_line_numbers = 0
 ```
 
 ## Language Support
@@ -174,10 +174,10 @@ The plugin supports multiple fence styles by default:
 - Triple backticks: ```
 - Triple tildes: ~~~
 
-These patterns can be customized via `g:better_code_blocks_fence_patterns`:
+These patterns can be customized via `g:better_code_block_fence_patterns`:
 
 ```vim
-let g:better_code_blocks_fence_patterns = [
+let g:better_code_block_fence_patterns = [
       \ '^\(`\{3,}\)',
       \ '^\(\~\{3,}\)'
       \ ]
@@ -189,19 +189,19 @@ Each pattern must include a capture group for the fence characters.
 
 The plugin provides several commands for controlling its behavior at runtime:
 
-- `:BetterCodeBlocksRefresh` - Manually refresh highlighting
-- `:BetterCodeBlocksClear` - Clear all highlighting
-- `:BetterCodeBlocksToggleDebug` - Toggle debug mode
-- `:BetterCodeBlocksStyle {style}` - Change highlight style
-- `:BetterCodeBlocksToggleLineNumbers` - Toggle line numbers
-- `:BetterCodeBlocksRegisterStyle {name} {args...}` - Register custom style
+- `:BetterCodeBlockRefresh` - Manually refresh highlighting
+- `:BetterCodeBlockClear` - Clear all highlighting
+- `:BetterCodeBlockToggleDebug` - Toggle debug mode
+- `:BetterCodeBlockStyle {style}` - Change highlight style
+- `:BetterCodeBlockToggleLineNumbers` - Toggle line numbers
+- `:BetterCodeBlockRegisterStyle {name} {args...}` - Register custom style
 
 ## Mappings
 
 The plugin provides a `<Plug>` mapping for toggling highlighting:
 
 ```vim
-nmap <Leader>fh <Plug>(BetterCodeBlocksToggle)
+nmap <Leader>fh <Plug>(BetterCodeBlockToggle)
 ```
 
 This mapping can be customized in the user's vimrc.
@@ -210,29 +210,29 @@ This mapping can be customized in the user's vimrc.
 
 All plugin behavior can be configured through global variables in the user's vimrc:
 
-| Variable                                  | Default                           | Description                    |
-| ----------------------------------------- | --------------------------------- | ------------------------------ |
-| `g:better_code_blocks_style`              | `'green'`                         | Default highlight style        |
-| `g:better_code_blocks_custom`             | `{}`                              | Dictionary for custom styles   |
-| `g:better_code_blocks_debug`              | `0`                               | Enable debug messages          |
-| `g:better_code_blocks_extensions`         | `['md', 'markdown', 'txt']`       | File extensions to activate on |
-| `g:better_code_blocks_keyword`            | `'highlight'`                     | Primary highlight keyword      |
-| `g:better_code_blocks_keyword_aliases`    | `['hl', 'mark', 'emphasize']`     | Alternative keywords           |
-| `g:better_code_blocks_show_line_numbers`  | `1`                               | Show line numbers              |
-| `g:better_code_blocks_line_number_method` | `'auto'`                          | Line number display method     |
-| `g:better_code_blocks_line_number_format` | `' %d '`                          | Line number format             |
-| `g:better_code_blocks_line_number_style`  | `'LineNr'`                        | Line number highlight group    |
-| `g:better_code_blocks_error_style`        | `'red'`                           | Style for errors               |
-| `g:better_code_blocks_update_delay`       | `0`                               | Delay before updating (ms)     |
-| `g:better_code_blocks_fence_patterns`     | `['^\(`\{3,}\)', '^\(\~\{3,}\)']` | Fence patterns                 |
-| `g:better_code_blocks_method`             | `'background'`                    | Highlight method               |
+| Variable                                 | Default                           | Description                    |
+| ---------------------------------------- | --------------------------------- | ------------------------------ |
+| `g:better_code_block_style`              | `'green'`                         | Default highlight style        |
+| `g:better_code_block_custom`             | `{}`                              | Dictionary for custom styles   |
+| `g:better_code_block_debug`              | `0`                               | Enable debug messages          |
+| `g:better_code_block_extensions`         | `['md', 'markdown', 'txt']`       | File extensions to activate on |
+| `g:better_code_block_keyword`            | `'highlight'`                     | Primary highlight keyword      |
+| `g:better_code_block_keyword_aliases`    | `['hl', 'mark', 'emphasize']`     | Alternative keywords           |
+| `g:better_code_block_show_line_numbers`  | `1`                               | Show line numbers              |
+| `g:better_code_block_line_number_method` | `'auto'`                          | Line number display method     |
+| `g:better_code_block_line_number_format` | `' %d '`                          | Line number format             |
+| `g:better_code_block_line_number_style`  | `'LineNr'`                        | Line number highlight group    |
+| `g:better_code_block_error_style`        | `'red'`                           | Style for errors               |
+| `g:better_code_block_update_delay`       | `0`                               | Delay before updating (ms)     |
+| `g:better_code_block_fence_patterns`     | `['^\(`\{3,}\)', '^\(\~\{3,}\)']` | Fence patterns                 |
+| `g:better_code_block_method`             | `'background'`                    | Highlight method               |
 
 ## Error Handling
 
 The plugin provides visual feedback for errors in highlight specifications:
 
 - Invalid line numbers (e.g., specifying line 10 in a 5-line block) are highlighted in the fence line
-- The error style can be configured via `g:better_code_blocks_error_style`
+- The error style can be configured via `g:better_code_block_error_style`
 
 ## Performance Considerations
 

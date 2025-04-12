@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script to run Vader tests for better-code-blocks vim plugin
+# Script to run Vader tests for better-code-block vim plugin
 # Usage: ./run_tests.sh [test_file] [options]
 #   If test_file is not provided, all tests will be run
 #   Options:
@@ -8,7 +8,7 @@
 
 # Set script to exit on error
 set -e
-cd better-code-blocks
+cd better-code-block
 
 # Check if Vader.vim exists
 if [ ! -d "../vader.vim" ]; then
