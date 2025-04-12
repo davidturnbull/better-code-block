@@ -1,14 +1,13 @@
-" Syntax file for Fenced code block language detection
-" This file defines the languages supported in fenced code blocks
+" Syntax file for Better Code Blocks language detection
+" This file defines the languages supported in code blocks
 
-" Define supported languages and their syntax files
 let s:supported_languages = {
   \ 'python': 'python',
   \ 'py': 'python',
   \ 'javascript': 'javascript',
   \ 'js': 'javascript',
   \ 'typescript': 'typescript',
-  \ 'ts': 'typescript', 
+  \ 'ts': 'typescript',
   \ 'ruby': 'ruby',
   \ 'rb': 'ruby',
   \ 'html': 'html',
@@ -33,35 +32,25 @@ let s:supported_languages = {
   \ 'mdx': 'markdown'
   \ }
 
-" Load syntax for a specific language
 function! s:load_syntax_for(lang)
   let l:lang_name = get(s:supported_languages, a:lang, '')
-  
   if empty(l:lang_name)
-    " Unknown language, skip
     return
   endif
-  
-  " Include the syntax file for the detected language
   let l:syntax_file = 'syntax/' . l:lang_name . '.vim'
   if filereadable($VIMRUNTIME . '/' . l:syntax_file)
     execute 'syntax include @' . l:lang_name . ' ' . l:syntax_file
-    
-    " Create region for this language that works with our highlight pattern
-    " The region excludes the ```lang line and the closing ``` line
-    execute 'syntax region fenced' . l:lang_name . ' matchgroup=markdownCodeDelimiter ' .
+    execute 'syntax region betterCodeBlocks' . l:lang_name . ' matchgroup=markdownCodeDelimiter ' .
           \ 'start=/^```\s*' . a:lang . '\s*.*$/ ' .
           \ 'end=/^```\s*$/ ' .
           \ 'keepend contains=@' . l:lang_name . ',MarkdownCodeHighlight'
   endif
 endfunction
 
-" Load syntax for all supported languages
 function! s:load_all_syntaxes()
   for [lang, _] in items(s:supported_languages)
     call s:load_syntax_for(lang)
   endfor
 endfunction
 
-" Initialize syntax loading
-call s:load_all_syntaxes() 
+call s:load_all_syntaxes()

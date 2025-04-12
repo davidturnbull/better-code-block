@@ -1,10 +1,10 @@
-" Autoload functions for fenced-code-block
+" Autoload functions for better-code-blocks
 " Functions in this file will be automatically loaded when called
 
 " Parse the highlight property to get line numbers to highlight
-function! fenced_code_block#parse_highlight_spec(line)
+function! better_code_blocks#parse_highlight_spec(line)
   " Extract the highlight specification from the line
-  let highlight_spec = fenced_code_block#extract_highlight_spec(a:line)
+  let highlight_spec = better_code_blocks#extract_highlight_spec(a:line)
   
   " If no highlight property found, return empty array
   if empty(highlight_spec)
@@ -12,13 +12,13 @@ function! fenced_code_block#parse_highlight_spec(line)
   endif
   
   " Parse the highlight attribute into line numbers
-  return fenced_code_block#parse_highlight_attribute(highlight_spec)
+  return better_code_blocks#parse_highlight_attribute(highlight_spec)
 endfunction
 
 " Extract highlight specification from a markdown fence line
-function! fenced_code_block#extract_highlight_spec(line)
+function! better_code_blocks#extract_highlight_spec(line)
   " Try primary keyword and aliases
-  let keywords = [g:fenced_code_block_keyword] + g:fenced_code_block_keyword_aliases
+  let keywords = [g:better_code_blocks_keyword] + g:better_code_blocks_keyword_aliases
   let highlight_spec = ''
   
   for keyword in keywords
@@ -50,9 +50,9 @@ function! fenced_code_block#extract_highlight_spec(line)
 endfunction
 
 " Extract start line number from a markdown fence line
-function! fenced_code_block#extract_start_spec(line)
+function! better_code_blocks#extract_start_spec(line)
   " Try primary keyword and aliases
-  let keywords = [g:fenced_code_block_start_keyword] + g:fenced_code_block_start_keyword_aliases
+  let keywords = [g:better_code_blocks_start_keyword] + g:better_code_blocks_start_keyword_aliases
   let start_spec = ''
   
   for keyword in keywords
@@ -118,10 +118,8 @@ function! s:match_keyword_without_quotes(line, keyword)
 endfunction
 
 " Parse a highlight attribute value into an array of line numbers
-function! fenced_code_block#parse_highlight_attribute(highlight_spec)
+function! better_code_blocks#parse_highlight_attribute(highlight_spec)
   let lines_to_highlight = []
-  
-
   
   " Process comma-separated parts
   for part in split(a:highlight_spec, ',')
@@ -143,25 +141,18 @@ function! fenced_code_block#parse_highlight_attribute(highlight_spec)
   return lines_to_highlight
 endfunction
 
-
-
 " Parse a range like "1-3" into an array of line numbers
 function! s:parse_range(part)
   let lines = []
   
   " Check for negative numbers in the range part
   if a:part =~# '-\d\+'
-    " Found a negative number, mark it for error highlighting
     if !exists('b:mch_negative_values')
       let b:mch_negative_values = []
     endif
     call add(b:mch_negative_values, a:part)
     call s:debug_message("Detected negative number in range: " . a:part)
-    
-    " Set the error flag directly 
     let b:mch_has_errors = 1
-    
-    " We still need to check for reversed range as well, so don't return early
   endif
   
   let range_match = matchlist(a:part, '\(\d\+\)\s*-\s*\(\d\+\)')
@@ -169,21 +160,14 @@ function! s:parse_range(part)
     let start = str2nr(range_match[1])
     let end = str2nr(range_match[2])
     
-    " Check if this is a reversed range before getting lines
     if end < start && !empty(a:part)
-      " Mark this as an invalid range that needs error highlighting
       call s:debug_message("Detected reversed range: " . start . "-" . end)
-      
-      " Set the error flag directly 
       let b:mch_has_errors = 1
-      
-      " Store the reversed range for later highlighting when b:current_fence_line is available
       if !exists('b:mch_reversed_ranges')
         let b:mch_reversed_ranges = []
       endif
       call add(b:mch_reversed_ranges, [start, end, a:part])
       call s:debug_message("Stored reversed range for later highlighting: " . start . "-" . end)
-      
       return []
     endif
     
@@ -197,12 +181,10 @@ endfunction
 " Get all line numbers in a range
 function! s:get_range_lines(start, end)
   let lines = []
-  " Check if the range is reversed (end < start)
   if a:end < a:start
     call s:debug_message("Invalid range: end (" . a:end . ") is less than start (" . a:start . ")")
     return []
   endif
-  
   for i in range(a:start, a:end)
     call add(lines, i)
   endfor
@@ -211,28 +193,19 @@ endfunction
 
 " Parse a single line number
 function! s:parse_single_line(part)
-  " Check for negative numbers
   if a:part =~# '^-\d\+$'
-    " Found a negative number, mark it for error highlighting
     if !exists('b:mch_negative_values')
       let b:mch_negative_values = []
     endif
     call add(b:mch_negative_values, a:part)
     call s:debug_message("Detected negative line number: " . a:part)
-    
-    " Set the error flag directly
     let b:mch_has_errors = 1
-    
     return 0
   endif
-  
-  " If the part contains a dash, it's a malformed range that was already 
-  " rejected by s:parse_range, so return 0
   if a:part =~# '-'
     call s:debug_message("Rejected malformed range as single line: " . a:part)
     return 0
   endif
-
   let num = str2nr(a:part)
   if num > 0
     call s:debug_message("Added single line " . num)
@@ -242,58 +215,42 @@ function! s:parse_single_line(part)
 endfunction
 
 " Parse a start value from a start specification
-function! fenced_code_block#parse_start_value(start_spec)
+function! better_code_blocks#parse_start_value(start_spec)
   if empty(a:start_spec)
-    return 1  " Default start value if not specified
+    return 1
   endif
-  
-  " Check for negative start value
   if a:start_spec =~# '^-\d\+$'
-    " Found a negative number, mark it for error highlighting
     if !exists('b:mch_negative_start_values')
       let b:mch_negative_start_values = []
     endif
     call add(b:mch_negative_start_values, a:start_spec)
     call s:debug_message("Detected negative start value: " . a:start_spec)
-    
-    " Set the error flag directly
     let b:mch_has_errors = 1
-    
-    return 1  " Return default value for negative input
+    return 1
   endif
-  
-  " Check for non-numeric value
   if a:start_spec !~# '^\d\+$'
-    " Found a non-numeric value, mark it for error highlighting
     if !exists('b:mch_invalid_start_values')
       let b:mch_invalid_start_values = []
     endif
     call add(b:mch_invalid_start_values, a:start_spec)
     call s:debug_message("Detected invalid start value: " . a:start_spec)
-    
-    " Set the error flag directly
     let b:mch_has_errors = 1
-    
-    return 1  " Return default value for invalid input
+    return 1
   endif
-  
   let num = str2nr(a:start_spec)
   call s:debug_message("Parsed start value: " . num)
   return num
 endfunction
 
 " Apply highlighting to specified lines
-function! fenced_code_block#apply_highlighting()
-  " If delay is set and we're in event-triggered update, debounce it
-  if g:fenced_code_block_update_delay > 0 && exists('b:fenced_code_block_update_timer')
-    call timer_stop(b:fenced_code_block_update_timer)
+function! better_code_blocks#apply_highlighting()
+  if g:better_code_blocks_update_delay > 0 && exists('b:better_code_blocks_update_timer')
+    call timer_stop(b:better_code_blocks_update_timer)
   endif
-  
-  if g:fenced_code_block_update_delay > 0
-    let b:fenced_code_block_update_timer = timer_start(g:fenced_code_block_update_delay, 
-          \ {-> fenced_code_block#do_apply_highlighting()})
+  if g:better_code_blocks_update_delay > 0
+    let b:better_code_blocks_update_timer = timer_start(g:better_code_blocks_update_delay, {-> better_code_blocks#do_apply_highlighting()})
   else
-    call fenced_code_block#do_apply_highlighting()
+    call better_code_blocks#do_apply_highlighting()
   endif
 endfunction
 
@@ -307,21 +264,14 @@ function! s:find_code_blocks()
   let fence_type = ''
   let code_block_lines = 0
   let current_block = {}
-  
-  " Process each line in the buffer
   for line in buffer_text
     let line_num += 1
     call s:debug_message("Processing line " . line_num . ": " . line)
-    
-    " Check for code block start using configured fence patterns
     if !in_code_block
       let fence_match = ''
       let fence_pattern = ''
-      
-      " Debug fence patterns
-      call s:debug_message("Checking fence patterns: " . string(g:fenced_code_block_fence_patterns))
-      
-      for pattern in g:fenced_code_block_fence_patterns
+      call s:debug_message("Checking fence patterns: " . string(g:better_code_blocks_fence_patterns))
+      for pattern in g:better_code_blocks_fence_patterns
         call s:debug_message("Trying pattern: " . pattern . " against line: " . line)
         let matches = matchlist(line, pattern)
         if !empty(matches)
@@ -334,55 +284,36 @@ function! s:find_code_blocks()
           endif
         endif
       endfor
-      
-      " Special case for test environment - handle simple backtick fences
       if empty(fence_match) && line =~# '^```'
         let fence_match = '```'
         let fence_pattern = '^```\(.*\)$'
         call s:debug_message("Special case: matched simple backtick fence")
       endif
-      
       if !empty(fence_match)
         let in_code_block = 1
         let code_block_start = line_num
-        let lines_to_highlight = fenced_code_block#parse_highlight_spec(line)
-        " Extract start line number
-        let start_spec = fenced_code_block#extract_start_spec(line)
-        let start_value = fenced_code_block#parse_start_value(start_spec)
-        " Store just the fence characters, not the entire match
-        " For test environment, always use '```' for backtick fences
+        let lines_to_highlight = better_code_blocks#parse_highlight_spec(line)
+        let start_spec = better_code_blocks#extract_start_spec(line)
+        let start_value = better_code_blocks#parse_start_value(start_spec)
         if line =~# '^```'
           let fence_type = '```'
         else
           let fence_type = fence_match
         endif
-        " Reset the code block line count
         let code_block_lines = 0
         let language = s:detect_language(line)
-        let current_block = {
-              \ 'start_line': code_block_start,
-              \ 'fence_type': fence_type,
-              \ 'highlight_lines': lines_to_highlight,
-              \ 'language': language,
-              \ 'content_lines': [],
-              \ 'start_value': start_value
-              \ }
+        let current_block = {'start_line': code_block_start, 'fence_type': fence_type, 'highlight_lines': lines_to_highlight, 'language': language, 'content_lines': [], 'start_value': start_value}
         call s:debug_message("Found code block at line " . line_num . " with fence: " . fence_type . ", highlight lines: " . string(lines_to_highlight))
         continue
       endif
     endif
-    
-    " Check for code block end (exact match with the fence that started it)
     if in_code_block
-      " Special case for test environment - handle simple backtick fences
       if fence_type ==# '```' && line =~# '^```\s*$'
         let is_fence_end = 1
         call s:debug_message("Special case: matched simple backtick fence end: " . line)
       else
-        " Use string comparison instead of regex to avoid E33 error
         let is_fence_end = line ==# fence_type || line =~# '^' . escape(fence_type, '\.^$*[]') . '\s*$'
       endif
-      
       if is_fence_end
         let current_block['end_line'] = line_num
         let current_block['line_count'] = code_block_lines
@@ -392,66 +323,46 @@ function! s:find_code_blocks()
         continue
       endif
     endif
-    
-    " Inside code block - track content
     if in_code_block
       let code_block_lines += 1
       call add(current_block['content_lines'], {'line_num': line_num, 'content': line, 'relative_line': code_block_lines})
     endif
   endfor
-  
   return code_blocks
 endfunction
 
 " Actual highlighting application (after potential delay)
-function! fenced_code_block#do_apply_highlighting()
-  " Clear previous highlights
-  call fenced_code_block#clear_highlights()
-  
-  let b:mch_has_errors = 0  " Reset error flag for this buffer
+function! better_code_blocks#do_apply_highlighting()
+  call better_code_blocks#clear_highlights()
+  let b:mch_has_errors = 0
   let code_blocks = s:find_code_blocks()
-  
-  " Process each code block
   for block in code_blocks
     let code_block_start = block['start_line']
     let code_block_lines = block['line_count']
     let lines_to_highlight = block['highlight_lines']
-    
-    " Store the current fence line for error highlighting
-    let b:current_fence_line = code_block_start
-    
-    " Handle any stored reversed ranges for this fence line
+    let b:mch_current_fence_line = code_block_start
     if exists('b:mch_reversed_ranges') && !empty(b:mch_reversed_ranges)
       for range_info in b:mch_reversed_ranges
-        call s:highlight_invalid_spec(b:current_fence_line, [range_info[0], range_info[1]])
-        call s:debug_message("Applied delayed highlighting for reversed range: " . range_info[0] . "-" . range_info[1] . " at line " . b:current_fence_line)
+        call s:highlight_invalid_spec(b:mch_current_fence_line, [range_info[0], range_info[1]])
+        call s:debug_message("Applied delayed highlighting for reversed range: " . range_info[0] . "-" . range_info[1] . " at line " . b:mch_current_fence_line)
       endfor
-      let b:mch_reversed_ranges = []  " Clear after processing
+      let b:mch_reversed_ranges = []
     endif
-    
-    " Handle any stored negative values for this fence line
     if exists('b:mch_negative_values') && !empty(b:mch_negative_values)
-      call s:highlight_negative_values(b:current_fence_line, b:mch_negative_values)
-      let b:mch_negative_values = []  " Clear after processing
+      call s:highlight_negative_values(b:mch_current_fence_line, b:mch_negative_values)
+      let b:mch_negative_values = []
     endif
-    
-    " Handle any stored negative start values for this fence line
     if exists('b:mch_negative_start_values') && !empty(b:mch_negative_start_values)
-      call s:highlight_invalid_start_value(b:current_fence_line, b:mch_negative_start_values, '-')
-      let b:mch_negative_start_values = []  " Clear after processing
+      call s:highlight_invalid_start_value(b:mch_current_fence_line, b:mch_negative_start_values, '-')
+      let b:mch_negative_start_values = []
     endif
-    
-    " Handle any stored invalid start values for this fence line
     if exists('b:mch_invalid_start_values') && !empty(b:mch_invalid_start_values)
-      call s:highlight_invalid_start_value(b:current_fence_line, b:mch_invalid_start_values, 'invalid')
-      let b:mch_invalid_start_values = []  " Clear after processing
+      call s:highlight_invalid_start_value(b:mch_current_fence_line, b:mch_invalid_start_values, 'invalid')
+      let b:mch_invalid_start_values = []
     endif
-    
-    " Also highlight any directly detected reversed ranges in highlight specs
-    let line_text = getline(b:current_fence_line)
-    let highlight_spec = fenced_code_block#extract_highlight_spec(line_text)
+    let line_text = getline(b:mch_current_fence_line)
+    let highlight_spec = better_code_blocks#extract_highlight_spec(line_text)
     if !empty(highlight_spec)
-      " Search for all reversed ranges like '5-3' where first number > second number
       let parts = split(highlight_spec, ',')
       for part in parts
         let part = trim(part)
@@ -460,34 +371,24 @@ function! fenced_code_block#do_apply_highlighting()
           let start = str2nr(range_match[1])
           let end = str2nr(range_match[2])
           if end < start
-            call s:highlight_invalid_part(b:current_fence_line, highlight_spec, part)
+            call s:highlight_invalid_part(b:mch_current_fence_line, highlight_spec, part)
             let b:mch_has_errors = 1
           endif
         endif
       endfor
     endif
-    
-    " Validate line numbers now that we know the total code block size
     if !empty(lines_to_highlight)
       call s:validate_highlight_lines(lines_to_highlight, code_block_lines, code_block_start)
     endif
-    
-    " Process each content line
     for content_line in block['content_lines']
       let line_num = content_line['line_num']
       let relative_line = content_line['relative_line']
       let start_value = block['start_value']
       let display_line = relative_line + start_value - 1
-      
-      " Apply highlight to specified lines within code block
       if !empty(lines_to_highlight)
-        " Check if we need to adjust highlight lines for start value
         let adjusted_lines_to_highlight = []
         if start_value > 1
-          " Convert absolute line numbers (adjusted by start value) back to relative lines
           for hl_line in lines_to_highlight
-            " If highlight number is >= start_value, it should be treated as an absolute line
-            " and converted to a relative line for comparison
             if hl_line >= start_value
               let adjusted_line = hl_line - start_value + 1
               if adjusted_line > 0 && adjusted_line <= code_block_lines
@@ -497,8 +398,7 @@ function! fenced_code_block#do_apply_highlighting()
               call add(adjusted_lines_to_highlight, hl_line)
             endif
           endfor
-          call s:debug_message("Adjusted highlight lines for start value " . start_value . ": " . 
-                \ string(lines_to_highlight) . " -> " . string(adjusted_lines_to_highlight))
+          call s:debug_message("Adjusted highlight lines for start value " . start_value . ": " . string(lines_to_highlight) . " -> " . string(adjusted_lines_to_highlight))
         else
           let adjusted_lines_to_highlight = lines_to_highlight
         endif
@@ -508,64 +408,53 @@ function! fenced_code_block#do_apply_highlighting()
           call s:debug_message("Highlighted line " . line_num . " (relative line " . relative_line . ")")
         endif
         
-        " Add line number based on configured method
-        if (type(g:fenced_code_block_show_line_numbers) == v:t_number && g:fenced_code_block_show_line_numbers) ||
-              \ g:fenced_code_block_show_line_numbers == 'always' ||
-              \ (g:fenced_code_block_show_line_numbers == 'with_highlights' && !empty(lines_to_highlight))
+        if (type(g:better_code_blocks_show_line_numbers) == v:t_number && g:better_code_blocks_show_line_numbers) || g:better_code_blocks_show_line_numbers == 'always' || (g:better_code_blocks_show_line_numbers == 'with_highlights' && !empty(lines_to_highlight))
           call s:place_line_number(line_num, display_line)
         endif
       else
-        " For blocks without highlight specifications
-        if (type(g:fenced_code_block_show_line_numbers) == v:t_number && g:fenced_code_block_show_line_numbers) ||
-              \ g:fenced_code_block_show_line_numbers == 'always'
+        if (type(g:better_code_blocks_show_line_numbers) == v:t_number && g:better_code_blocks_show_line_numbers) || g:better_code_blocks_show_line_numbers == 'always'
           call s:place_line_number(line_num, display_line)
         endif
       endif
     endfor
   endfor
-  
-  " Clear fence line reference
-  unlet! b:current_fence_line
+  unlet! b:mch_current_fence_line
 endfunction
 
 " Enable feature with highlighting
-function! fenced_code_block#enable()
-  call fenced_code_block#apply_highlighting()
-  echo 'Fenced Code Block enabled'
+function! better_code_blocks#enable()
+  call better_code_blocks#apply_highlighting()
+  echo 'Better Code Blocks enabled'
 endfunction
 
 " Disable the feature
-function! fenced_code_block#disable()
-  call fenced_code_block#clear_highlights()
-  echo 'Fenced Code Block disabled'
+function! better_code_blocks#disable()
+  call better_code_blocks#clear_highlights()
+  echo 'Better Code Blocks disabled'
 endfunction
 
 " Toggle functionality
-function! fenced_code_block#toggle()
+function! better_code_blocks#toggle()
   if exists('b:highlighting_enabled') && b:highlighting_enabled
     let b:highlighting_enabled = 0
-    call fenced_code_block#disable()
+    call better_code_blocks#disable()
   else
     let b:highlighting_enabled = 1
-    call fenced_code_block#enable()
+    call better_code_blocks#enable()
   endif
 endfunction
 
 " Debug output
 function! s:debug_message(msg)
-  " Always output debug messages during tests
-  if g:fenced_code_block_debug == 1 || exists('g:vader_file')
-    echom "[BFCB] " . a:msg
+  if g:better_code_blocks_debug == 1 || exists('g:vader_file')
+    echom "[BCB] " . a:msg
   endif
 endfunction
 
 " Place line number using configured method
 function! s:place_line_number(line_num, relative_line)
-  let line_number_text = substitute(g:fenced_code_block_line_number_format, '%d', a:relative_line, 'g')
-  
-  " Determine method to use
+  let line_number_text = substitute(g:better_code_blocks_line_number_format, '%d', a:relative_line, 'g')
   let method = s:determine_line_number_method()
-  
   if method == 'nvim' && has('nvim-0.5')
     call s:place_line_number_nvim(a:line_num, line_number_text)
   elseif method == 'prop' && exists('*prop_type_add')
@@ -577,14 +466,10 @@ endfunction
 
 " Determine the best line number method based on configuration and capabilities
 function! s:determine_line_number_method()
-  " Set default if not defined
-  if !exists('g:fenced_code_block_line_number_method')
-    let g:fenced_code_block_line_number_method = 'auto'
+  if !exists('g:better_code_blocks_line_number_method')
+    let g:better_code_blocks_line_number_method = 'auto'
   endif
-
-  let method = g:fenced_code_block_line_number_method
-  
-  " If auto, select best available method
+  let method = g:better_code_blocks_line_number_method
   if method == 'auto'
     if has('nvim-0.5')
       return 'nvim'
@@ -594,71 +479,47 @@ function! s:determine_line_number_method()
       return 'sign'
     endif
   endif
-  
   return method
 endfunction
 
 " Place a line number using Neovim's virtual text
 function! s:place_line_number_nvim(line_num, line_number_text)
   if !exists('b:mch_namespace_id')
-    let b:mch_namespace_id = nvim_create_namespace('fenced_code_block')
+    let b:mch_namespace_id = nvim_create_namespace('better_code_blocks')
   endif
-  
-  " Clear any existing line number at this line
   call nvim_buf_clear_namespace(0, b:mch_namespace_id, a:line_num-1, a:line_num)
-  
-  " Place the line number as virtual text right after the line number column
-  call nvim_buf_set_virtual_text(0, b:mch_namespace_id, a:line_num-1, 
-        \ [[a:line_number_text, g:fenced_code_block_line_number_style]], {})
+  call nvim_buf_set_virtual_text(0, b:mch_namespace_id, a:line_num-1, [[a:line_number_text, g:better_code_blocks_line_number_style]], {})
 endfunction
 
 " Place a line number using Vim's text properties
 function! s:place_line_number_vim(line_num, line_number_text)
-  " Ensure we have our property type defined
   if !exists('s:prop_type_defined')
-    call prop_type_add('BFCB_LineNr', {'highlight': g:fenced_code_block_line_number_style})
+    call prop_type_add('BCB_LineNr', {'highlight': g:better_code_blocks_line_number_style})
     let s:prop_type_defined = 1
   endif
-  
-  " Store IDs for cleanup
   if !exists('b:mch_prop_ids')
     let b:mch_prop_ids = []
   endif
-  
-  " Add the property at the start of the line
-  let prop_id = prop_add(a:line_num, 1, {
-        \ 'type': 'BFCB_LineNr',
-        \ 'text': a:line_number_text
-        \ })
-  
+  let prop_id = prop_add(a:line_num, 1, {'type': 'BCB_LineNr', 'text': a:line_number_text})
   call add(b:mch_prop_ids, prop_id)
 endfunction
 
 " Place a line number using signs
 function! s:place_line_number_sign(line_num, relative_line)
-  " Create a unique sign name for each line number value
-  let sign_name = 'BFCBLineNr' . a:relative_line
-  
-  " Define the sign if not already defined
+  let sign_name = 'BCBLineNr' . a:relative_line
   if !exists('s:defined_signs') || index(s:defined_signs, sign_name) == -1
-    execute 'sign define ' . sign_name . ' text=' . a:relative_line . ' texthl=' . g:fenced_code_block_line_number_style
+    execute 'sign define ' . sign_name . ' text=' . a:relative_line . ' texthl=' . g:better_code_blocks_line_number_style
     if !exists('s:defined_signs')
       let s:defined_signs = []
     endif
     call add(s:defined_signs, sign_name)
   endif
-  
-  " Generate a unique ID for this sign placement
   if !exists('s:sign_id_counter')
-    let s:sign_id_counter = 1000  " Start with a high number to avoid conflicts
+    let s:sign_id_counter = 1000
   else
     let s:sign_id_counter += 1
   endif
-  
-  " Place the sign
   execute 'sign place ' . s:sign_id_counter . ' line=' . a:line_num . ' name=' . sign_name . ' buffer=' . bufnr('%')
-  
-  " Store the sign ID for later removal
   if !exists('b:mch_sign_ids')
     let b:mch_sign_ids = []
   endif
@@ -670,29 +531,21 @@ function! s:validate_highlight_lines(lines_to_highlight, code_block_lines, code_
   let has_invalid_lines = 0
   let invalid_numbers = []
   let start_value = 1
-  
-  " Get the start value for this code block
   let line_text = getline(a:code_block_start)
-  let start_spec = fenced_code_block#extract_start_spec(line_text)
+  let start_spec = better_code_blocks#extract_start_spec(line_text)
   if !empty(start_spec)
-    let start_value = fenced_code_block#parse_start_value(start_spec)
+    let start_value = better_code_blocks#parse_start_value(start_spec)
   endif
-  
   for line_num in a:lines_to_highlight
-    " Skip checking for lines that may be absolute line numbers matching the start value
     if line_num >= start_value && line_num < start_value + a:code_block_lines
-      " This is a valid absolute line number (offset by start_value)
       continue
     endif
-    
-    " Check if the line number is valid (greater than 0 and less than or equal to code_block_lines)
     if line_num <= 0 || line_num > a:code_block_lines
       call s:debug_message("Invalid line number: " . line_num . " (code block has " . a:code_block_lines . " lines)")
       let has_invalid_lines = 1
       call add(invalid_numbers, line_num)
     endif
   endfor
-  
   if has_invalid_lines
     call s:highlight_invalid_spec(a:code_block_start, invalid_numbers)
     let b:mch_has_errors = 1
@@ -702,83 +555,60 @@ endfunction
 " Highlight an invalid highlight specification in the code fence line
 function! s:highlight_invalid_spec(fence_line, invalid_nums)
   let line_text = getline(a:fence_line)
-  
-  " Apply error highlight style
   silent! highlight clear MarkdownCodeHighlightError
-  if g:fenced_code_block_error_style == 'red'
+  if g:better_code_blocks_error_style == 'red'
     highlight MarkdownCodeHighlightError ctermbg=red ctermfg=white guibg=#FF0000 guifg=#FFFFFF
-  elseif g:fenced_code_block_error_style == 'reverse'
+  elseif g:better_code_blocks_error_style == 'reverse'
     highlight MarkdownCodeHighlightError cterm=reverse,bold gui=reverse,bold
   else
-    " Default fallback - DiffDelete is usually red in most colorschemes
     highlight link MarkdownCodeHighlightError DiffDelete
   endif
-  
-  " Find all highlight specification parts
-  let keyword_pattern = '\<\(' . g:fenced_code_block_keyword
-  for alias in g:fenced_code_block_keyword_aliases
+  let keyword_pattern = '\<\(' . g:better_code_blocks_keyword
+  for alias in g:better_code_blocks_keyword_aliases
     let keyword_pattern .= '\|' . alias
   endfor
   let keyword_pattern .= '\)=\([''"]\?\)\([^''"]*\)\2'
-  
   let matches = matchlist(line_text, keyword_pattern)
   if !empty(matches)
     let highlight_spec = matches[3]
     let start_idx = stridx(line_text, highlight_spec)
-    
     if start_idx != -1
-      " Store match id for cleanup
-      if !exists('w:fenced_code_block_error_match_ids')
-        let w:fenced_code_block_error_match_ids = []
+      if !exists('w:better_code_blocks_error_match_ids')
+        let w:better_code_blocks_error_match_ids = []
       endif
-      
-      " Find specific parts to highlight
       for invalid_num in a:invalid_nums
-        " Match patterns for the invalid number
         let patterns = [
-              \ '\<' . invalid_num . '\>', 
-              \ '\<\d\+\s*-\s*' . invalid_num . '\>', 
+              \ '\<' . invalid_num . '\>',
+              \ '\<\d\+\s*-\s*' . invalid_num . '\>',
               \ '\<' . invalid_num . '\s*-\s*\d\+\>'
               \ ]
-        
-        " Add specific pattern for reversed ranges
         if len(a:invalid_nums) >= 2 && index(a:invalid_nums, invalid_num) == 0
           let next_index = index(a:invalid_nums, invalid_num) + 1
           if next_index < len(a:invalid_nums)
             let next_num = a:invalid_nums[next_index]
             if invalid_num > next_num
-              " This is more specific for reversed ranges
               let rev_pattern = '\<' . invalid_num . '\s*-\s*' . next_num . '\>'
               call add(patterns, rev_pattern)
-              
-              " Find the reversed range in the highlight_spec
               let pos = matchstrpos(highlight_spec, rev_pattern)
               if pos[1] != -1
                 let error_start = start_idx + pos[1]
                 let error_end = start_idx + pos[2]
-                let match_id = matchadd('MarkdownCodeHighlightError', 
-                      \ '\%' . a:fence_line . 'l\%>' . error_start . 'c\%<' . (error_end + 1) . 'c')
-                call add(w:fenced_code_block_error_match_ids, match_id)
-                call s:debug_message("Added error highlight for reversed range " . a:fence_line . 
-                      \ ", position " . error_start . "-" . error_end . " (" . invalid_num . "-" . next_num . ")")
-                
-                " Continue to next invalid number, we've handled this reversed range already
+                let match_id = matchadd('MarkdownCodeHighlightError', '\%' . a:fence_line . 'l\%>' . error_start . 'c\%<' . (error_end + 1) . 'c')
+                call add(w:better_code_blocks_error_match_ids, match_id)
+                call s:debug_message("Added error highlight for reversed range " . a:fence_line . ", position " . error_start . "-" . error_end . " (" . invalid_num . "-" . next_num . ")")
                 continue
               endif
             endif
           endif
         endif
-        
         for pattern in patterns
           let pos = matchstrpos(highlight_spec, pattern)
           if pos[1] != -1
             let error_start = start_idx + pos[1]
             let error_end = start_idx + pos[2]
-            let match_id = matchadd('MarkdownCodeHighlightError', 
-                  \ '\%' . a:fence_line . 'l\%>' . error_start . 'c\%<' . (error_end + 1) . 'c')
-            call add(w:fenced_code_block_error_match_ids, match_id)
-            call s:debug_message("Added error highlight for line " . a:fence_line . 
-                  \ ", position " . error_start . "-" . error_end . " (invalid number: " . invalid_num . ")")
+            let match_id = matchadd('MarkdownCodeHighlightError', '\%' . a:fence_line . 'l\%>' . error_start . 'c\%<' . (error_end + 1) . 'c')
+            call add(w:better_code_blocks_error_match_ids, match_id)
+            call s:debug_message("Added error highlight for line " . a:fence_line . ", position " . error_start . "-" . error_end . " (invalid number: " . invalid_num . ")")
           endif
         endfor
       endfor
@@ -788,18 +618,12 @@ endfunction
 
 " Highlight a specific line using multiple methods for compatibility
 function! s:highlight_line(line_num)
-  " 1. Use syntax highlighting
   execute 'syntax match MarkdownCodeHighlight /\%' . a:line_num . 'l.*/'
-  
-  " 2. Use :match highlighting (helps with full-width display)
-  if !exists('w:fenced_code_block_match_ids') 
-    let w:fenced_code_block_match_ids = []
+  if !exists('w:better_code_blocks_match_ids')
+    let w:better_code_blocks_match_ids = []
   endif
-  
   let match_id = matchadd('MarkdownCodeHighlight', '\%' . a:line_num . 'l.*')
-  call add(w:fenced_code_block_match_ids, match_id)
-  
-  " 3. Use 2match for additional coverage
+  call add(w:better_code_blocks_match_ids, match_id)
   execute '2match MarkdownCodeHighlight /\%' . a:line_num . 'l.*/'
 endfunction
 
@@ -831,61 +655,41 @@ function! s:clear_line_number_signs()
 endfunction
 
 " Clear all highlights
-function! fenced_code_block#clear_highlights()
-  " Clear syntax highlights
+function! better_code_blocks#clear_highlights()
   silent! syntax clear MarkdownCodeHighlight
   silent! syntax clear MarkdownCodeHighlightError
-  
-  " Clear match highlights
-  if exists('w:fenced_code_block_match_ids') && type(w:fenced_code_block_match_ids) == v:t_list
-    for id in w:fenced_code_block_match_ids
+  if exists('w:better_code_blocks_match_ids') && type(w:better_code_blocks_match_ids) == v:t_list
+    for id in w:better_code_blocks_match_ids
       try
         call matchdelete(id)
       catch
-        " Ignore errors for non-existent matches
       endtry
     endfor
   endif
-  let w:fenced_code_block_match_ids = []
-  
-  " Clear error highlights
-  if exists('w:fenced_code_block_error_match_ids') && type(w:fenced_code_block_error_match_ids) == v:t_list
-    for id in w:fenced_code_block_error_match_ids
+  let w:better_code_blocks_match_ids = []
+  if exists('w:better_code_blocks_error_match_ids') && type(w:better_code_blocks_error_match_ids) == v:t_list
+    for id in w:better_code_blocks_error_match_ids
       try
         call matchdelete(id)
       catch
-        " Ignore errors for non-existent matches
       endtry
     endfor
   endif
-  let w:fenced_code_block_error_match_ids = []
-  
-  " Clear stored reversed ranges
+  let w:better_code_blocks_error_match_ids = []
   if exists('b:mch_reversed_ranges')
     let b:mch_reversed_ranges = []
   endif
-  
-  " Clear stored negative values
   if exists('b:mch_negative_values')
     let b:mch_negative_values = []
   endif
-  
-  " Clear stored negative start values
   if exists('b:mch_negative_start_values')
     let b:mch_negative_start_values = []
   endif
-  
-  " Clear stored invalid start values
   if exists('b:mch_invalid_start_values')
     let b:mch_invalid_start_values = []
   endif
-  
-  " Clear 2match
   2match none
-  
-  " Clear line numbers based on method
   let method = s:determine_line_number_method()
-  
   if method == 'nvim' && has('nvim-0.5')
     call s:clear_line_number_nvim()
   elseif method == 'prop' && exists('*prop_type_add')
@@ -896,37 +700,29 @@ function! fenced_code_block#clear_highlights()
 endfunction
 
 " Apply highlighting style
-function! fenced_code_block#setup_highlight_style()
-  " Clear existing highlighting
+function! better_code_blocks#setup_highlight_style()
   silent! highlight clear MarkdownCodeHighlight
-  
-  " Apply main highlight style
   call s:apply_main_highlight_style()
-  
-  " Setup error highlight style
   call s:apply_error_highlight_style()
 endfunction
 
 " Apply the main highlight style based on configuration
 function! s:apply_main_highlight_style()
-  if has_key(g:fenced_code_block_custom, g:fenced_code_block_style)
-    call s:apply_custom_highlight_style(g:fenced_code_block_style)
-  elseif g:fenced_code_block_style =~ '^\(green\|blue\|yellow\|cyan\|magenta\)$'
-    call s:apply_color_highlight_style(g:fenced_code_block_style)
-  elseif g:fenced_code_block_style =~ '^\(invert\|bold\|italic\|underline\|undercurl\)$'
-    call s:apply_attribute_highlight_style(g:fenced_code_block_style)
+  if has_key(g:better_code_blocks_custom, g:better_code_blocks_style)
+    call s:apply_custom_highlight_style(g:better_code_blocks_style)
+  elseif g:better_code_blocks_style =~ '^\(green\|blue\|yellow\|cyan\|magenta\)$'
+    call s:apply_color_highlight_style(g:better_code_blocks_style)
+  elseif g:better_code_blocks_style =~ '^\(invert\|bold\|italic\|underline\|undercurl\)$'
+    call s:apply_attribute_highlight_style(g:better_code_blocks_style)
   else
-    " Default fallback - DiffAdd is usually green in most colorschemes
     highlight link MarkdownCodeHighlight DiffAdd
   endif
 endfunction
 
 " Apply custom highlight style from configuration
 function! s:apply_custom_highlight_style(style_name)
-  let custom = g:fenced_code_block_custom[a:style_name]
+  let custom = g:better_code_blocks_custom[a:style_name]
   let cmd = 'highlight MarkdownCodeHighlight'
-  
-  " Handle term/cterm attributes
   if has_key(custom, 'cterm')
     let cmd .= ' cterm=' . custom.cterm
   endif
@@ -936,8 +732,6 @@ function! s:apply_custom_highlight_style(style_name)
   if has_key(custom, 'ctermbg')
     let cmd .= ' ctermbg=' . custom.ctermbg
   endif
-  
-  " Handle gui attributes
   if has_key(custom, 'gui')
     let cmd .= ' gui=' . custom.gui
   endif
@@ -947,7 +741,6 @@ function! s:apply_custom_highlight_style(style_name)
   if has_key(custom, 'guibg')
     let cmd .= ' guibg=' . custom.guibg
   endif
-  
   execute cmd
 endfunction
 
@@ -974,91 +767,78 @@ endfunction
 " Apply error highlight style
 function! s:apply_error_highlight_style()
   silent! highlight clear MarkdownCodeHighlightError
-  
-  if g:fenced_code_block_error_style == 'red'
+  if g:better_code_blocks_error_style == 'red'
     highlight MarkdownCodeHighlightError ctermbg=red ctermfg=white guibg=#FF0000 guifg=#FFFFFF
-  elseif g:fenced_code_block_error_style == 'reverse'
+  elseif g:better_code_blocks_error_style == 'reverse'
     highlight MarkdownCodeHighlightError cterm=reverse,bold gui=reverse,bold
   else
-    " Default fallback - DiffDelete is usually red in most colorschemes
     highlight link MarkdownCodeHighlightError DiffDelete
   endif
 endfunction
 
 " Function to toggle line numbers
-function! fenced_code_block#toggle_line_numbers()
-  " Cycle through options: 'always' -> 'with_highlights' -> 'never' -> 'always'
-  if type(g:fenced_code_block_show_line_numbers) == v:t_number
-    " Convert from legacy boolean to string
-    let g:fenced_code_block_show_line_numbers = g:fenced_code_block_show_line_numbers ? 'always' : 'never'
+function! better_code_blocks#toggle_line_numbers()
+  if type(g:better_code_blocks_show_line_numbers) == v:t_number
+    let g:better_code_blocks_show_line_numbers = g:better_code_blocks_show_line_numbers ? 'always' : 'never'
   endif
-  
-  if g:fenced_code_block_show_line_numbers == 'always'
-    let g:fenced_code_block_show_line_numbers = 'with_highlights'
+  if g:better_code_blocks_show_line_numbers == 'always'
+    let g:better_code_blocks_show_line_numbers = 'with_highlights'
     call s:enable_line_numbers()
-  elseif g:fenced_code_block_show_line_numbers == 'with_highlights'
-    let g:fenced_code_block_show_line_numbers = 'never'
+  elseif g:better_code_blocks_show_line_numbers == 'with_highlights'
+    let g:better_code_blocks_show_line_numbers = 'never'
     call s:disable_line_numbers()
   else
-    let g:fenced_code_block_show_line_numbers = 'always'
+    let g:better_code_blocks_show_line_numbers = 'always'
     call s:enable_line_numbers()
   endif
-  
-  call fenced_code_block#apply_highlighting()
-  echo "Line numbers: " . g:fenced_code_block_show_line_numbers
+  call better_code_blocks#apply_highlighting()
+  echo "Line numbers: " . g:better_code_blocks_show_line_numbers
 endfunction
 
 " Enable line numbers in the buffer
 function! s:enable_line_numbers()
   set number
-  
-  " Only set signcolumn if using the sign method
   let method = s:determine_line_number_method()
   if method == 'sign'
-    " Always use the basic yes/no syntax for maximum compatibility
     set signcolumn=yes
   endif
 endfunction
 
 " Disable line numbers in the buffer
 function! s:disable_line_numbers()
-  " Reset signcolumn if needed
   let method = s:determine_line_number_method()
   if method == 'sign'
     set signcolumn=auto
   endif
 endfunction
 
-" Style-related functions
-function! fenced_code_block#complete_styles(ArgLead, CmdLine, CursorPos)
+" Complete styles for command
+function! better_code_blocks#complete_styles(ArgLead, CmdLine, CursorPos)
   let builtin_styles = ['green', 'yellow', 'cyan', 'blue', 'magenta', 'invert', 'bold', 'italic', 'underline', 'undercurl']
-  let custom_styles = keys(g:fenced_code_block_custom)
+  let custom_styles = keys(g:better_code_blocks_custom)
   let all_styles = builtin_styles + custom_styles
   return filter(all_styles, 'v:val =~ "^" . a:ArgLead')
 endfunction
 
-function! fenced_code_block#change_highlight_style(style)
-  let g:fenced_code_block_style = a:style
-  call fenced_code_block#setup_highlight_style()
-  call fenced_code_block#apply_highlighting()
+function! better_code_blocks#change_highlight_style(style)
+  let g:better_code_blocks_style = a:style
+  call better_code_blocks#setup_highlight_style()
+  call better_code_blocks#apply_highlighting()
   echo "Highlight style changed to: " . a:style
 endfunction
 
 " Register a custom highlight style
-function! fenced_code_block#register_custom_style(name, ...)
+function! better_code_blocks#register_custom_style(name, ...)
   if a:0 == 0
-    echoerr "FencedCodeBlockRegisterStyle requires at least one attribute!"
+    echoerr "BetterCodeBlocksRegisterStyle requires at least one attribute!"
     return
   endif
-  
   let custom = s:parse_style_attributes(a:000)
-  
   if empty(custom)
     echoerr "Failed to parse style attributes!"
     return
   endif
-  
-  let g:fenced_code_block_custom[a:name] = custom
+  let g:better_code_blocks_custom[a:name] = custom
   echo "Registered custom style: " . a:name
 endfunction
 
@@ -1066,212 +846,159 @@ endfunction
 function! s:parse_style_attributes(attrs)
   let custom = {}
   let i = 0
-  
   while i < len(a:attrs)
     let attr = a:attrs[i]
     let i += 1
-    
     if i >= len(a:attrs)
       echoerr "Missing value for attribute: " . attr
       return {}
     endif
-    
     let value = a:attrs[i]
     let custom[attr] = value
     let i += 1
   endwhile
-  
   return custom
 endfunction
 
 " Detect language from fence line
 function! s:detect_language(fence_line)
-  " Try different fence patterns to extract the language
-  
-  " Pattern 0: Handle weird fence case - must check this before other patterns
   if a:fence_line =~# '`````\s\+weird'
     call s:debug_message("Detected weird fence pattern, returning empty string")
     return ''
   endif
-  
-  " Pattern 1: Standard markdown format - ```language
   let patterns = [
-        \ '```\s*\(\w\+\)',             
-        \ '```\(\w\+\)',                
-        \ '```\s*\(\w\+\)\s\+.*',       
-        \ '```\s*\(\w\+\-\w\+\)',        
+        \ '```\s*\(\w\+\)',
+        \ '```\(\w\+\)',
+        \ '```\s*\(\w\+\)\s\+.*',
+        \ '```\s*\(\w\+\-\w\+\)',
         \ '```\s*\(\w\+\.\w\+\)',
         \ '```\s*\(\w\+\)+++',
         \ '```\s*\(\w\+\)++',
         \ '```\s*\(\w\+\)#'
         \ ]
-  
-  " Special case mappings for language detection
   let language_mappings = {
         \ 'shell': 'shell-bash',
         \ 'c': 'c++',
         \ 'config': 'config.json',
         \ 'f': 'f#'
         \ }
-  
   for pattern in patterns
     let matches = matchlist(a:fence_line, pattern)
     if len(matches) > 1 && !empty(matches[1])
       let lang = matches[1]
-      
-      " Apply special case mappings if needed
       if has_key(language_mappings, lang)
         let lang = language_mappings[lang]
       endif
-      
       call s:debug_message("Detected language: " . lang . " using pattern: " . pattern)
       return lang
     endif
   endfor
-  
-  " Pattern 2: Jekyll/Hugo style - ```{language}
-  let curly_pattern = '```{\(\w\+\)}'  
+  let curly_pattern = '```{\(\w\+\)}'
   let matches = matchlist(a:fence_line, curly_pattern)
   if len(matches) > 1 && !empty(matches[1])
     call s:debug_message("Detected language: " . matches[1] . " using curly brace pattern")
     return matches[1]
   endif
-  
-  " No special patterns matched
-  
-  " No language found
   call s:debug_message("No language detected in fence: " . a:fence_line)
   return ''
 endfunction
 
-" Get highlight groups at cursor position 
-function! fenced_code_block#get_highlight_groups_at_cursor()
+" Get highlight groups at cursor position
+function! better_code_blocks#get_highlight_groups_at_cursor()
   let highlight_groups = []
   let stack = synstack(line('.'), col('.'))
-  
   for id in stack
     call add(highlight_groups, synIDattr(id, 'name'))
   endfor
-  
-  " Add linked groups
   for id in stack
     let linked_id = synIDtrans(id)
     if linked_id != id
       call add(highlight_groups, synIDattr(linked_id, 'name'))
     endif
   endfor
-  
-  return highlight_groups 
-endfunction 
+  return highlight_groups
+endfunction
 
-" Add wrapper functions for testing script-local functions
-
-" Test wrapper for s:detect_language
-function! fenced_code_block#test_detect_language(fence_line)
+" Test wrappers for internal functions
+function! better_code_blocks#test_detect_language(fence_line)
   return s:detect_language(a:fence_line)
 endfunction
 
-" Test wrapper for s:parse_style_attributes
-function! fenced_code_block#test_parse_style_attributes(attrs)
+function! better_code_blocks#test_parse_style_attributes(attrs)
   return s:parse_style_attributes(a:attrs)
 endfunction
 
-" Test wrapper for s:determine_line_number_method
-function! fenced_code_block#test_determine_line_number_method()
+function! better_code_blocks#test_determine_line_number_method()
   return s:determine_line_number_method()
 endfunction
 
-" Test wrapper for s:find_code_blocks
-function! fenced_code_block#test_find_code_blocks()
+function! better_code_blocks#test_find_code_blocks()
   return s:find_code_blocks()
 endfunction
 
-" Test wrapper for s:get_range_lines
-function! fenced_code_block#test_get_range_lines(start, end)
+function! better_code_blocks#test_get_range_lines(start, end)
   return s:get_range_lines(a:start, a:end)
 endfunction
 
-" Test wrapper for s:parse_single_line
-function! fenced_code_block#test_parse_single_line(part)
+function! better_code_blocks#test_parse_single_line(part)
   return s:parse_single_line(a:part)
 endfunction
 
-" Test wrapper for s:validate_highlight_lines
-function! fenced_code_block#test_validate_highlight_lines(lines, block_size, start_line)
+function! better_code_blocks#test_validate_highlight_lines(lines, block_size, start_line)
   return s:validate_highlight_lines(a:lines, a:block_size, a:start_line)
 endfunction
 
-" Fix the signcolumn setting to be compatible with more Vim versions
 function! s:enable_line_numbers()
   set number
-  
-  " Only set signcolumn if using the sign method
   let method = s:determine_line_number_method()
   if method == 'sign'
-    " Always use the basic yes/no syntax for maximum compatibility
     set signcolumn=yes
   endif
 endfunction
 
-" Fix the signcolumn disable to be compatible
 function! s:disable_line_numbers()
-  " Reset signcolumn if needed
   let method = s:determine_line_number_method()
   if method == 'sign'
     set signcolumn=auto
   endif
 endfunction
 
-" Expose get_range_lines for testing
-function! fenced_code_block#test_get_range_lines(start, end)
+function! better_code_blocks#test_get_range_lines(start, end)
   return s:get_range_lines(a:start, a:end)
 endfunction
 
-" Load all syntaxes for supported languages
-function! fenced_code_block#load_all_syntaxes()
-  " This function should call into the actual implementation in markdown_fenced_languages.vim
+function! better_code_blocks#load_all_syntaxes()
   if exists('*s:load_all_syntaxes')
     call s:load_all_syntaxes()
   else
-    " Try to source the syntax file if the function doesn't exist
-    runtime syntax/markdown_fenced_languages.vim
+    runtime syntax/markdown_better_code_blocks_languages.vim
   endif
 endfunction
 
 " Highlight negative values in the code fence line
 function! s:highlight_negative_values(fence_line, negative_values)
   let line_text = getline(a:fence_line)
-  
-  " Apply error highlight style
   silent! highlight clear MarkdownCodeHighlightError
-  if g:fenced_code_block_error_style == 'red'
+  if g:better_code_blocks_error_style == 'red'
     highlight MarkdownCodeHighlightError ctermbg=red ctermfg=white guibg=#FF0000 guifg=#FFFFFF
-  elseif g:fenced_code_block_error_style == 'reverse'
+  elseif g:better_code_blocks_error_style == 'reverse'
     highlight MarkdownCodeHighlightError cterm=reverse,bold gui=reverse,bold
   else
-    " Default fallback - DiffDelete is usually red in most colorschemes
     highlight link MarkdownCodeHighlightError DiffDelete
   endif
-  
-  " Find all highlight specification parts
-  let keyword_pattern = '\<\(' . g:fenced_code_block_keyword
-  for alias in g:fenced_code_block_keyword_aliases
+  let keyword_pattern = '\<\(' . g:better_code_blocks_keyword
+  for alias in g:better_code_blocks_keyword_aliases
     let keyword_pattern .= '\|' . alias
   endfor
   let keyword_pattern .= '\)=\([''"]\?\)\([^''"]*\)\2'
-  
   let matches = matchlist(line_text, keyword_pattern)
   if !empty(matches)
     let highlight_spec = matches[3]
     let start_idx = stridx(line_text, highlight_spec)
-    
     if start_idx != -1
-      " Store match id for cleanup
-      if !exists('w:fenced_code_block_error_match_ids')
-        let w:fenced_code_block_error_match_ids = []
+      if !exists('w:better_code_blocks_error_match_ids')
+        let w:better_code_blocks_error_match_ids = []
       endif
-      
-      " Find all negative values in the highlight specification
       let lpos = 0
       while lpos >= 0
         let lpos = match(highlight_spec, '-\d\+', lpos)
@@ -1280,22 +1007,12 @@ function! s:highlight_negative_values(fence_line, negative_values)
           if rpos < 0
             let rpos = len(highlight_spec)
           endif
-          
-          " Extract the negative value
           let negative_value = highlight_spec[lpos : rpos-1]
-          
-          " Calculate absolute positions
           let error_start = start_idx + lpos
           let error_end = start_idx + rpos
-          
-          " Add highlight
-          let match_id = matchadd('MarkdownCodeHighlightError', 
-                \ '\%' . a:fence_line . 'l\%>' . error_start . 'c\%<' . (error_end + 1) . 'c')
-          call add(w:fenced_code_block_error_match_ids, match_id)
-          call s:debug_message("Added error highlight for negative value at line " . a:fence_line . 
-                \ ", position " . error_start . "-" . error_end . " (negative value: " . negative_value . ")")
-          
-          " Move position for next search
+          let match_id = matchadd('MarkdownCodeHighlightError', '\%' . a:fence_line . 'l\%>' . error_start . 'c\%<' . (error_end + 1) . 'c')
+          call add(w:better_code_blocks_error_match_ids, match_id)
+          call s:debug_message("Added error highlight for negative value at line " . a:fence_line . ", position " . error_start . "-" . error_end . " (negative value: " . negative_value . ")")
           let lpos = rpos + 1
         endif
       endwhile
@@ -1306,54 +1023,37 @@ endfunction
 " Highlight a specific part of the highlight specification
 function! s:highlight_invalid_part(fence_line, highlight_spec, part)
   let line_text = getline(a:fence_line)
-  
-  " Find position of highlight_spec in the line
   let spec_pos = stridx(line_text, a:highlight_spec)
   if spec_pos == -1
     return
   endif
-  
-  " Find position of part in highlight_spec
   let part_pos = stridx(a:highlight_spec, a:part)
   if part_pos == -1
     return
   endif
-  
-  " Calculate absolute position
   let start_pos = spec_pos + part_pos
   let end_pos = start_pos + len(a:part)
-  
-  " Add error highlight
-  if !exists('w:fenced_code_block_error_match_ids')
-    let w:fenced_code_block_error_match_ids = []
+  if !exists('w:better_code_blocks_error_match_ids')
+    let w:better_code_blocks_error_match_ids = []
   endif
-  
-  let match_id = matchadd('MarkdownCodeHighlightError', 
-        \ '\%' . a:fence_line . 'l\%>' . start_pos . 'c\%<' . (end_pos + 1) . 'c')
-  call add(w:fenced_code_block_error_match_ids, match_id)
-  call s:debug_message("Added error highlight for invalid part at line " . a:fence_line . 
-        \ ", position " . start_pos . "-" . end_pos . " (part: " . a:part . ")")
+  let match_id = matchadd('MarkdownCodeHighlightError', '\%' . a:fence_line . 'l\%>' . start_pos . 'c\%<' . (end_pos + 1) . 'c')
+  call add(w:better_code_blocks_error_match_ids, match_id)
+  call s:debug_message("Added error highlight for invalid part at line " . a:fence_line . ", position " . start_pos . "-" . end_pos . " (part: " . a:part . ")")
 endfunction
 
 " Highlight an invalid start value in the code fence line
 function! s:highlight_invalid_start_value(fence_line, invalid_values, error_type)
   let line_text = getline(a:fence_line)
-  
-  " Apply error highlight style
   silent! highlight clear MarkdownCodeHighlightError
-  if g:fenced_code_block_error_style == 'red'
+  if g:better_code_blocks_error_style == 'red'
     highlight MarkdownCodeHighlightError ctermbg=red ctermfg=white guibg=#FF0000 guifg=#FFFFFF
-  elseif g:fenced_code_block_error_style == 'reverse'
+  elseif g:better_code_blocks_error_style == 'reverse'
     highlight MarkdownCodeHighlightError cterm=reverse,bold gui=reverse,bold
   else
-    " Default fallback - DiffDelete is usually red in most colorschemes
     highlight link MarkdownCodeHighlightError DiffDelete
   endif
-  
-  " Find all start specification parts
-  let keywords = [g:fenced_code_block_start_keyword] + g:fenced_code_block_start_keyword_aliases
+  let keywords = [g:better_code_blocks_start_keyword] + g:better_code_blocks_start_keyword_aliases
   let keyword_pattern = '\<\('
-  
   let first = 1
   for keyword in keywords
     if !first
@@ -1362,46 +1062,35 @@ function! s:highlight_invalid_start_value(fence_line, invalid_values, error_type
     let keyword_pattern .= keyword
     let first = 0
   endfor
-  
   let keyword_pattern .= '\)=\([''"]\?\)\([^''"]*\)\2'
-  
   let matches = matchlist(line_text, keyword_pattern)
   if !empty(matches)
     let start_spec = matches[3]
     let start_idx = stridx(line_text, start_spec)
-    
     if start_idx != -1
-      " Store match id for cleanup
-      if !exists('w:fenced_code_block_error_match_ids')
-        let w:fenced_code_block_error_match_ids = []
+      if !exists('w:better_code_blocks_error_match_ids')
+        let w:better_code_blocks_error_match_ids = []
       endif
-      
       if a:error_type == '-'
-        " Highlight negative values
         for invalid_value in a:invalid_values
           let pos = matchstrpos(start_spec, invalid_value)
           if pos[1] != -1
             let error_start = start_idx + pos[1]
             let error_end = start_idx + pos[2]
-            let match_id = matchadd('MarkdownCodeHighlightError', 
-                  \ '\%' . a:fence_line . 'l\%>' . error_start . 'c\%<' . (error_end + 1) . 'c')
-            call add(w:fenced_code_block_error_match_ids, match_id)
-            call s:debug_message("Added error highlight for negative start value at line " . a:fence_line . 
-                  \ ", position " . error_start . "-" . error_end . " (value: " . invalid_value . ")")
+            let match_id = matchadd('MarkdownCodeHighlightError', '\%' . a:fence_line . 'l\%>' . error_start . 'c\%<' . (error_end + 1) . 'c')
+            call add(w:better_code_blocks_error_match_ids, match_id)
+            call s:debug_message("Added error highlight for negative start value at line " . a:fence_line . ", position " . error_start . "-" . error_end . " (value: " . invalid_value . ")")
           endif
         endfor
       else
-        " Highlight non-numeric values
         for invalid_value in a:invalid_values
           let pos = matchstrpos(start_spec, invalid_value)
           if pos[1] != -1
             let error_start = start_idx + pos[1]
             let error_end = start_idx + pos[2]
-            let match_id = matchadd('MarkdownCodeHighlightError', 
-                  \ '\%' . a:fence_line . 'l\%>' . error_start . 'c\%<' . (error_end + 1) . 'c')
-            call add(w:fenced_code_block_error_match_ids, match_id)
-            call s:debug_message("Added error highlight for invalid start value at line " . a:fence_line . 
-                  \ ", position " . error_start . "-" . error_end . " (value: " . invalid_value . ")")
+            let match_id = matchadd('MarkdownCodeHighlightError', '\%' . a:fence_line . 'l\%>' . error_start . 'c\%<' . (error_end + 1) . 'c')
+            call add(w:better_code_blocks_error_match_ids, match_id)
+            call s:debug_message("Added error highlight for invalid start value at line " . a:fence_line . ", position " . error_start . "-" . error_end . " (value: " . invalid_value . ")")
           endif
         endfor
       endif

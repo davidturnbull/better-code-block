@@ -1,8 +1,8 @@
-# Better Fenced Code Block - Overview
+# better-code-blocks - Overview
 
 ## Purpose
 
-The Better Fenced Code Block plugin enhances Vim/Neovim's Markdown editing experience by providing a powerful way to highlight specific lines within fenced code blocks. This functionality is particularly valuable for:
+The better-code-blocks plugin enhances Vim/Neovim's Markdown editing experience by providing a powerful way to highlight specific lines within fenced code blocks. This functionality is particularly valuable for:
 
 - **Technical documentation writers** who need to draw attention to specific parts of code examples
 - **Educators** creating tutorials where certain lines need emphasis
@@ -25,6 +25,7 @@ At its core, the plugin:
 ### Line Highlighting
 
 - **Flexible syntax** for specifying lines to highlight:
+
   - Single lines: `highlight="3"`
   - Multiple lines: `highlight="1,3,5"`
   - Line ranges: `highlight="1-3"`
@@ -38,6 +39,7 @@ At its core, the plugin:
 ### Visual Customization
 
 - **Multiple built-in styles** including:
+
   - Color-based: green, blue, yellow, cyan, magenta
   - Attribute-based: bold, italic, underline, undercurl, invert
 

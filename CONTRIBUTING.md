@@ -1,4 +1,4 @@
-# Contributing to fenced-code-block
+# Contributing to better-code-blocks
 
 Thank you for your interest in contributing to this plugin! Here's how you can help.
 
@@ -7,8 +7,8 @@ Thank you for your interest in contributing to this plugin! Here's how you can h
 1. Fork and clone the repository:
 
    ```bash
-   git clone https://github.com/YOUR-USERNAME/fenced-code-block.git
-   cd fenced-code-block
+   git clone https://github.com/YOUR-USERNAME/better-code-blocks.git
+   cd better-code-blocks
    ```
 
 2. Set up your development environment:
