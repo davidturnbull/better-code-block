@@ -149,6 +149,21 @@ endfunction
 function! s:parse_range(part)
   let lines = []
   
+  " Check for negative numbers in the range part
+  if a:part =~# '-\d\+'
+    " Found a negative number, mark it for error highlighting
+    if !exists('b:mch_negative_values')
+      let b:mch_negative_values = []
+    endif
+    call add(b:mch_negative_values, a:part)
+    call s:debug_message("Detected negative number in range: " . a:part)
+    
+    " Set the error flag directly 
+    let b:mch_has_errors = 1
+    
+    " We still need to check for reversed range as well, so don't return early
+  endif
+  
   let range_match = matchlist(a:part, '\(\d\+\)\s*-\s*\(\d\+\)')
   if !empty(range_match)
     let start = str2nr(range_match[1])
@@ -196,6 +211,21 @@ endfunction
 
 " Parse a single line number
 function! s:parse_single_line(part)
+  " Check for negative numbers
+  if a:part =~# '^-\d\+$'
+    " Found a negative number, mark it for error highlighting
+    if !exists('b:mch_negative_values')
+      let b:mch_negative_values = []
+    endif
+    call add(b:mch_negative_values, a:part)
+    call s:debug_message("Detected negative line number: " . a:part)
+    
+    " Set the error flag directly
+    let b:mch_has_errors = 1
+    
+    return 0
+  endif
+  
   " If the part contains a dash, it's a malformed range that was already 
   " rejected by s:parse_range, so return 0
   if a:part =~# '-'
@@ -367,6 +397,32 @@ function! fenced_code_block#do_apply_highlighting()
         call s:debug_message("Applied delayed highlighting for reversed range: " . range_info[0] . "-" . range_info[1] . " at line " . b:current_fence_line)
       endfor
       let b:mch_reversed_ranges = []  " Clear after processing
+    endif
+    
+    " Handle any stored negative values for this fence line
+    if exists('b:mch_negative_values') && !empty(b:mch_negative_values)
+      call s:highlight_negative_values(b:current_fence_line, b:mch_negative_values)
+      let b:mch_negative_values = []  " Clear after processing
+    endif
+    
+    " Also highlight any directly detected reversed ranges in highlight specs
+    let line_text = getline(b:current_fence_line)
+    let highlight_spec = fenced_code_block#extract_highlight_spec(line_text)
+    if !empty(highlight_spec)
+      " Search for all reversed ranges like '5-3' where first number > second number
+      let parts = split(highlight_spec, ',')
+      for part in parts
+        let part = trim(part)
+        let range_match = matchlist(part, '\(\d\+\)\s*-\s*\(\d\+\)')
+        if !empty(range_match)
+          let start = str2nr(range_match[1])
+          let end = str2nr(range_match[2])
+          if end < start
+            call s:highlight_invalid_part(b:current_fence_line, highlight_spec, part)
+            let b:mch_has_errors = 1
+          endif
+        endif
+      endfor
     endif
     
     " Validate line numbers now that we know the total code block size
@@ -731,6 +787,11 @@ function! fenced_code_block#clear_highlights()
     let b:mch_reversed_ranges = []
   endif
   
+  " Clear stored negative values
+  if exists('b:mch_negative_values')
+    let b:mch_negative_values = []
+  endif
+  
   " Clear 2match
   2match none
   
@@ -1087,4 +1148,101 @@ function! fenced_code_block#load_all_syntaxes()
     " Try to source the syntax file if the function doesn't exist
     runtime syntax/markdown_fenced_languages.vim
   endif
+endfunction
+
+" Highlight negative values in the code fence line
+function! s:highlight_negative_values(fence_line, negative_values)
+  let line_text = getline(a:fence_line)
+  
+  " Apply error highlight style
+  silent! highlight clear MarkdownCodeHighlightError
+  if g:fenced_code_block_error_style == 'red'
+    highlight MarkdownCodeHighlightError ctermbg=red ctermfg=white guibg=#FF0000 guifg=#FFFFFF
+  elseif g:fenced_code_block_error_style == 'reverse'
+    highlight MarkdownCodeHighlightError cterm=reverse,bold gui=reverse,bold
+  else
+    " Default fallback - DiffDelete is usually red in most colorschemes
+    highlight link MarkdownCodeHighlightError DiffDelete
+  endif
+  
+  " Find all highlight specification parts
+  let keyword_pattern = '\<\(' . g:fenced_code_block_keyword
+  for alias in g:fenced_code_block_keyword_aliases
+    let keyword_pattern .= '\|' . alias
+  endfor
+  let keyword_pattern .= '\)=\([''"]\?\)\([^''"]*\)\2'
+  
+  let matches = matchlist(line_text, keyword_pattern)
+  if !empty(matches)
+    let highlight_spec = matches[3]
+    let start_idx = stridx(line_text, highlight_spec)
+    
+    if start_idx != -1
+      " Store match id for cleanup
+      if !exists('w:fenced_code_block_error_match_ids')
+        let w:fenced_code_block_error_match_ids = []
+      endif
+      
+      " Find all negative values in the highlight specification
+      let lpos = 0
+      while lpos >= 0
+        let lpos = match(highlight_spec, '-\d\+', lpos)
+        if lpos >= 0
+          let rpos = match(highlight_spec, '[,"\'' ]', lpos)
+          if rpos < 0
+            let rpos = len(highlight_spec)
+          endif
+          
+          " Extract the negative value
+          let negative_value = highlight_spec[lpos : rpos-1]
+          
+          " Calculate absolute positions
+          let error_start = start_idx + lpos
+          let error_end = start_idx + rpos
+          
+          " Add highlight
+          let match_id = matchadd('MarkdownCodeHighlightError', 
+                \ '\%' . a:fence_line . 'l\%>' . error_start . 'c\%<' . (error_end + 1) . 'c')
+          call add(w:fenced_code_block_error_match_ids, match_id)
+          call s:debug_message("Added error highlight for negative value at line " . a:fence_line . 
+                \ ", position " . error_start . "-" . error_end . " (negative value: " . negative_value . ")")
+          
+          " Move position for next search
+          let lpos = rpos + 1
+        endif
+      endwhile
+    endif
+  endif
+endfunction
+
+" Highlight a specific part of the highlight specification
+function! s:highlight_invalid_part(fence_line, highlight_spec, part)
+  let line_text = getline(a:fence_line)
+  
+  " Find position of highlight_spec in the line
+  let spec_pos = stridx(line_text, a:highlight_spec)
+  if spec_pos == -1
+    return
+  endif
+  
+  " Find position of part in highlight_spec
+  let part_pos = stridx(a:highlight_spec, a:part)
+  if part_pos == -1
+    return
+  endif
+  
+  " Calculate absolute position
+  let start_pos = spec_pos + part_pos
+  let end_pos = start_pos + len(a:part)
+  
+  " Add error highlight
+  if !exists('w:fenced_code_block_error_match_ids')
+    let w:fenced_code_block_error_match_ids = []
+  endif
+  
+  let match_id = matchadd('MarkdownCodeHighlightError', 
+        \ '\%' . a:fence_line . 'l\%>' . start_pos . 'c\%<' . (end_pos + 1) . 'c')
+  call add(w:fenced_code_block_error_match_ids, match_id)
+  call s:debug_message("Added error highlight for invalid part at line " . a:fence_line . 
+        \ ", position " . start_pos . "-" . end_pos . " (part: " . a:part . ")")
 endfunction
