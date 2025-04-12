@@ -16,170 +16,149 @@ function! better_code_block#parse_highlight_spec(line)
 endfunction
 
 " Extract highlight specification from a markdown fence line
-function! better_code_block#extract_highlight_spec(line)
-  " Try primary keyword and aliases
-  let keywords = [g:better_code_block_keyword] + g:better_code_block_keyword_aliases
-  let highlight_spec = ''
-  
-  for keyword in keywords
-    " Try to match with each quote style
-    let spec = s:match_keyword_with_quotes(a:line, keyword, '"')
-    if !empty(spec)
-      let highlight_spec = spec
-      call s:debug_message("Found spec with keyword '" . keyword . "' in double quotes: '" . highlight_spec . "'")
+function! better_code_block#extract_highlight_spec(line) abort
+  let l:keywords = [g:better_code_block_keyword] + g:better_code_block_keyword_aliases
+  let l:highlight_spec = ''
+  for l:keyword in l:keywords
+    let l:spec = s:GetFlagValueWithQuotes(a:line, l:keyword, '"')
+    if !empty(l:spec)
+      let l:highlight_spec = l:spec
+      call s:LogDebug("Found spec with keyword '" . l:keyword . "' in double quotes: '" . l:highlight_spec . "'")
       break
     endif
-    
-    let spec = s:match_keyword_with_quotes(a:line, keyword, "'")
-    if !empty(spec)
-      let highlight_spec = spec
-      call s:debug_message("Found spec with keyword '" . keyword . "' in single quotes: '" . highlight_spec . "'")
+    let l:spec = s:GetFlagValueWithQuotes(a:line, l:keyword, "'")
+    if !empty(l:spec)
+      let l:highlight_spec = l:spec
+      call s:LogDebug("Found spec with keyword '" . l:keyword . "' in single quotes: '" . l:highlight_spec . "'")
       break
     endif
-    
-    " Try without quotes
-    let spec = s:match_keyword_without_quotes(a:line, keyword)
-    if !empty(spec)
-      let highlight_spec = spec
-      call s:debug_message("Found spec with keyword '" . keyword . "' without quotes: '" . highlight_spec . "'")
+    let l:spec = s:GetFlagValueWithoutQuotes(a:line, l:keyword)
+    if !empty(l:spec)
+      let l:highlight_spec = l:spec
+      call s:LogDebug("Found spec with keyword '" . l:keyword . "' without quotes: '" . l:highlight_spec . "'")
       break
     endif
   endfor
-  
-  return highlight_spec
+  return l:highlight_spec
 endfunction
 
 " Extract start line number from a markdown fence line
-function! better_code_block#extract_start_spec(line)
-  " Try primary keyword and aliases
-  let keywords = [g:better_code_block_start_keyword] + g:better_code_block_start_keyword_aliases
-  let start_spec = ''
-  
-  for keyword in keywords
-    " Try to match with each quote style
-    let spec = s:match_keyword_with_quotes(a:line, keyword, '"')
-    if !empty(spec)
-      let start_spec = spec
-      call s:debug_message("Found start spec with keyword '" . keyword . "' in double quotes: '" . start_spec . "'")
+function! better_code_block#extract_start_spec(line) abort
+  let l:keywords = [g:better_code_block_start_keyword] + g:better_code_block_start_keyword_aliases
+  let l:start_spec = ''
+  for l:keyword in l:keywords
+    let l:spec = s:GetFlagValueWithQuotes(a:line, l:keyword, '"')
+    if !empty(l:spec)
+      let l:start_spec = l:spec
+      call s:LogDebug("Found start spec with keyword '" . l:keyword . "' in double quotes: '" . l:start_spec . "'")
       break
     endif
-    
-    let spec = s:match_keyword_with_quotes(a:line, keyword, "'")
-    if !empty(spec)
-      let start_spec = spec
-      call s:debug_message("Found start spec with keyword '" . keyword . "' in single quotes: '" . start_spec . "'")
+    let l:spec = s:GetFlagValueWithQuotes(a:line, l:keyword, "'")
+    if !empty(l:spec)
+      let l:start_spec = l:spec
+      call s:LogDebug("Found start spec with keyword '" . l:keyword . "' in single quotes: '" . l:start_spec . "'")
       break
     endif
-    
-    " Try without quotes
-    let spec = s:match_keyword_without_quotes(a:line, keyword)
-    if !empty(spec)
-      let start_spec = spec
-      call s:debug_message("Found start spec with keyword '" . keyword . "' without quotes: '" . start_spec . "'")
+    let l:spec = s:GetFlagValueWithoutQuotes(a:line, l:keyword)
+    if !empty(l:spec)
+      let l:start_spec = l:spec
+      call s:LogDebug("Found start spec with keyword '" . l:keyword . "' without quotes: '" . l:start_spec . "'")
       break
     endif
   endfor
-  
-  return start_spec
+  return l:start_spec
 endfunction
 
-" Helper function to match keyword with quotes
-function! s:match_keyword_with_quotes(line, keyword, quote_char)
-  let escaped_quote = (a:quote_char == '"') ? '\"' : "'"
-  " First try with space after the keyword=
-  let pattern = a:keyword . '\s*=\s*' . a:quote_char . '\([^' . escaped_quote . ']*\)' . a:quote_char
-  let matches = matchlist(a:line, pattern)
-  
-  if !empty(matches)
-    return trim(matches[1])
+" New pure function to extract a flag value enclosed in quotes without side effects.
+function! s:GetFlagValueWithQuotes(line, keyword, quote) abort
+  let l:pattern = a:keyword . '\s*=\s*' . a:quote . '\([^' . a:quote . ']*\)' . a:quote
+  let l:result = matchlist(a:line, l:pattern)
+  if !empty(l:result)
+    return trim(l:result[1])
   endif
-  
-  " Also try without space
-  let pattern = a:keyword . '=' . a:quote_char . '\([^' . escaped_quote . ']*\)' . a:quote_char
-  let matches = matchlist(a:line, pattern)
-  
-  if !empty(matches)
-    return trim(matches[1])
+  let l:pattern = a:keyword . '=' . a:quote . '\([^' . a:quote . ']*\)' . a:quote
+  let l:result = matchlist(a:line, l:pattern)
+  if !empty(l:result)
+    return trim(l:result[1])
   endif
-  
   return ''
 endfunction
 
-" Helper function to match keyword without quotes
-function! s:match_keyword_without_quotes(line, keyword)
-  let pattern = a:keyword . '=\([0-9,\s\-]\+\)'
-  let matches = matchlist(a:line, pattern)
-  
-  if !empty(matches)
-    return trim(matches[1])
+" New pure function to extract a flag value without quotes.
+function! s:GetFlagValueWithoutQuotes(line, keyword) abort
+  let l:pattern = a:keyword . '=\([0-9,\s\-]\+\)'
+  let l:result = matchlist(a:line, l:pattern)
+  if !empty(l:result)
+    return trim(l:result[1])
   endif
-  
   return ''
 endfunction
 
 " Parse a highlight attribute value into an array of line numbers
-function! better_code_block#parse_highlight_attribute(highlight_spec)
-  let lines_to_highlight = []
-  
-  " Process comma-separated parts
-  for part in split(a:highlight_spec, ',')
-    let part = trim(part)
-    
-    " Check for range (e.g., "1-3")
-    let range_lines = s:parse_range(part)
-    if !empty(range_lines)
-      call extend(lines_to_highlight, range_lines)
+function! better_code_block#parse_highlight_attribute(highlight_spec) abort
+  let l:numbers = []
+  for l:part in split(a:highlight_spec, ',')
+    let l:part = trim(l:part)
+    let l:range_numbers = s:ExtractRangeNumbers(l:part)
+    if !empty(l:range_numbers)
+      call extend(l:numbers, l:range_numbers)
     else
-      " Try to parse as single line
-      let single_line = s:parse_single_line(part)
-      if single_line > 0
-        call add(lines_to_highlight, single_line)
+      let l:single = s:ParseSingleLineNumber(l:part)
+      if l:single > 0
+        call add(l:numbers, l:single)
       endif
     endif
   endfor
-  
-  return lines_to_highlight
+  return l:numbers
 endfunction
 
-" Parse a range like "1-3" into an array of line numbers
-function! s:parse_range(part)
-  let lines = []
-  
-  " Check for negative numbers in the range part
-  if a:part =~# '-\d\+'
-    if !exists('b:mch_negative_values')
-      let b:mch_negative_values = []
-    endif
-    call add(b:mch_negative_values, a:part)
-    call s:debug_message("Detected negative number in range: " . a:part)
-    let b:mch_has_errors = 1
+" Pure function to extract a numerical range from a string (format: "start-end")
+function! s:ExtractRangeNumbers(part) abort
+  let l:match = matchlist(a:part, '^\s*\(\d\+\)\s*-\s*\(\d\+\)\s*$')
+  if empty(l:match)
+    return []
   endif
-  
-  let range_match = matchlist(a:part, '\(\d\+\)\s*-\s*\(\d\+\)')
-  if !empty(range_match)
-    let start = str2nr(range_match[1])
-    let end = str2nr(range_match[2])
-    
-    if end < start && !empty(a:part)
-      call s:debug_message("Detected reversed range: " . start . "-" . end)
-      let b:mch_has_errors = 1
-      if !exists('b:mch_reversed_ranges')
-        let b:mch_reversed_ranges = []
-      endif
-      call add(b:mch_reversed_ranges, [start, end, a:part])
-      call s:debug_message("Stored reversed range for later highlighting: " . start . "-" . end)
-      return []
-    endif
-    
-    let lines = s:get_range_lines(start, end)
-    call s:debug_message("Added range " . start . "-" . end)
+  let l:start = str2nr(l:match[1])
+  let l:end = str2nr(l:match[2])
+  if l:end < l:start
+    return []
   endif
-  
-  return lines
+  return range(l:start, l:end)
+endfunction
+
+function! s:parse_range(part) abort
+  return s:ExtractRangeNumbers(a:part)
 endfunction
 
 " Get all line numbers in a range
+function! s:GetRangeLines(start, end)
+  let lines = []
+  if a:end < a:start
+    call s:LogDebug("Invalid range: end (" . a:end . ") is less than start (" . a:start . ")")
+    return []
+  endif
+  for i in range(a:start, a:end)
+    call add(lines, i)
+  endfor
+  return lines
+endfunction
+
+function! s:ParsePositiveInteger(number_str) abort
+  let l:num = str2nr(a:number_str)
+  return (l:num > 0 ? l:num : 0)
+endfunction
+
+function! s:ParseSingleLineNumber(part) abort
+  " If the part contains a dash then it is not a valid single positive number.
+  if a:part =~ '-'
+    return 0
+  endif
+  return s:ParsePositiveInteger(a:part)
+endfunction
+
 function! s:get_range_lines(start, end)
+  return s:GetRangeLines(a:start, a:end)
+endfunction
   let lines = []
   if a:end < a:start
     call s:debug_message("Invalid range: end (" . a:end . ") is less than start (" . a:start . ")")
@@ -445,7 +424,7 @@ function! better_code_block#toggle()
 endfunction
 
 " Debug output
-function! s:debug_message(msg)
+function! s:LogDebug(msg) abort
   if g:better_code_block_debug == 1 || exists('g:vader_file')
     echom "[BCB] " . a:msg
   endif
