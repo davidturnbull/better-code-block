@@ -1,8 +1,8 @@
-# better-code-blocks - Overview
+# better-code-block - Overview
 
 ## Purpose
 
-The better-code-blocks plugin enhances Vim/Neovim's Markdown editing experience by providing a powerful way to highlight specific lines within fenced code blocks. This functionality is particularly valuable for:
+The better-code-block plugin enhances Vim/Neovim's Markdown editing experience by providing a powerful way to highlight specific lines within fenced code blocks. This functionality is particularly valuable for:
 
 - **Technical documentation writers** who need to draw attention to specific parts of code examples
 - **Educators** creating tutorials where certain lines need emphasis

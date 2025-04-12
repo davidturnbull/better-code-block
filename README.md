@@ -1,4 +1,4 @@
-# better-code-blocks
+# better-code-block
 
 Enhances syntax highlighting within fenced code blocks in Markdown (and other supported files) by allowing specific lines to be highlighted. This is particularly useful for documentation, tutorials, and presentations where drawing attention to specific parts of code examples is necessary.
 
@@ -11,7 +11,7 @@ Enhances syntax highlighting within fenced code blocks in Markdown (and other su
 - **Custom Line Number Start:** Define a custom starting value for line numbers with `start=10` attribute.
 - **Multiple Keywords:** Use `highlight=`, `hl=`, `mark=`, or `emphasize=` to trigger highlighting.
 - **Configurable:** Adjust filetypes, highlight styles, line number display, and more.
-- **Multiple Fence Styles:** Supports `````and`~~~`fences by default, configurable via`g:better_code_blocks_fence_patterns`.
+- **Multiple Fence Styles:** Supports `````and`~~~`fences by default, configurable via`g:better_code_block_fence_patterns`.
 - **Supports Common Language Identifiers:** Recognizes many common language identifiers (like `python`, `javascript`, `ruby`, `bash`, `markdown`, `mdx`, etc.) for syntax highlighting within the blocks.
 
 ## Installation
@@ -21,28 +21,28 @@ Use your preferred Vim/Neovim plugin manager:
 **vim-plug:**
 
 ```vim
-Plug 'davidturnbull/better-code-blocks'
+Plug 'davidturnbull/better-code-block'
 ```
 
 **Vundle:**
 
 ```vim
-Plugin 'davidturnbull/better-code-blocks'
+Plugin 'davidturnbull/better-code-block'
 ```
 
 **Packer.nvim:**
 
 ```lua
-use 'davidturnbull/better-code-blocks'
+use 'davidturnbull/better-code-block'
 ```
 
 **lazy.nvim:**
 
 ```lua
-{ 'davidturnbull/better-code-blocks', ft = { "markdown", "txt" } } -- Adjust ft as needed
+{ 'davidturnbull/better-code-block', ft = { "markdown", "txt" } } -- Adjust ft as needed
 ```
 
-Remember to replace `'davidturnbull/better-code-blocks'` with the actual repository path once published. Then run the appropriate install command (e.g., `:PlugInstall`, `:PluginInstall`).
+Remember to replace `'davidturnbull/better-code-block'` with the actual repository path once published. Then run the appropriate install command (e.g., `:PlugInstall`, `:PluginInstall`).
 
 ## Usage
 
@@ -73,90 +73,90 @@ This will apply the configured highlight style to line 2 and lines 4 through 5 o
 
 Configure the plugin by setting various global variables in your vim configuration file (vimrc, init.vim, or init.lua). Below are the available configuration options along with examples:
 
-- g:better_code_blocks_style (default: 'green')
+- g:better_code_block_style (default: 'green')
   This variable sets the default highlight style. Built-in styles include 'green', 'blue', 'yellow', 'cyan', 'magenta', 'invert', 'bold', 'italic', 'underline', and 'undercurl'.
   Example:
-      let g:better_code_blocks_style = 'blue'
+  let g:better_code_block_style = 'blue'
 
-- g:better_code_blocks_custom (default: {})
+- g:better_code_block_custom (default: {})
   Use this dictionary to register custom styles.
   Example:
-      call BetterCodeBlocksRegisterStyle('my_cyan', 'ctermbg=cyan', 'guibg=#00FFFF', 'cterm=bold', 'gui=bold')
-      let g:better_code_blocks_style = 'my_cyan'
+  call BetterCodeBlockRegisterStyle('my_cyan', 'ctermbg=cyan', 'guibg=#00FFFF', 'cterm=bold', 'gui=bold')
+  let g:better_code_block_style = 'my_cyan'
 
-- g:better_code_blocks_debug (default: 0)
+- g:better_code_block_debug (default: 0)
   Enable debug messages by setting this to 1.
   Example:
-      let g:better_code_blocks_debug = 1
+  let g:better_code_block_debug = 1
 
-- g:better_code_blocks_extensions (default: ['md', 'markdown', 'txt'])
+- g:better_code_block_extensions (default: ['md', 'markdown', 'txt'])
   Specifies the file extensions on which the plugin is active.
   Example:
-      let g:better_code_blocks_extensions = ['md']
+  let g:better_code_block_extensions = ['md']
 
-- g:better_code_blocks_keyword (default: 'highlight')
+- g:better_code_block_keyword (default: 'highlight')
   Defines the primary keyword to trigger highlighting in fenced code blocks.
   Example:
-      let g:better_code_blocks_keyword = 'highlight'
+  let g:better_code_block_keyword = 'highlight'
 
-- g:better_code_blocks_keyword_aliases (default: ['hl', 'mark', 'emphasize'])
+- g:better_code_block_keyword_aliases (default: ['hl', 'mark', 'emphasize'])
   Alternative keywords for triggering highlights.
   Example:
-      let g:better_code_blocks_keyword_aliases = ['hl', 'mark']
+  let g:better_code_block_keyword_aliases = ['hl', 'mark']
 
-- g:better_code_blocks_start_keyword (default: 'start')
+- g:better_code_block_start_keyword (default: 'start')
   Primary keyword for setting the starting line number.
   Example:
-      let g:better_code_blocks_start_keyword = 'start'
+  let g:better_code_block_start_keyword = 'start'
 
-- g:better_code_blocks_start_keyword_aliases (default: ['from', 'begin'])
+- g:better_code_block_start_keyword_aliases (default: ['from', 'begin'])
   Alternative keywords for defining the starting line number.
   Example:
-      let g:better_code_blocks_start_keyword_aliases = ['from']
+  let g:better_code_block_start_keyword_aliases = ['from']
 
-- g:better_code_blocks_show_line_numbers (default: 1)
+- g:better_code_block_show_line_numbers (default: 1)
   Controls the display of line numbers within code blocks.
   Allowed values:
-    1 or 'always'       – always show line numbers.
-    0 or 'never'        – never show line numbers.
-    'with_highlights'   – show only when highlights are applied.
+  1 or 'always' – always show line numbers.
+  0 or 'never' – never show line numbers.
+  'with_highlights' – show only when highlights are applied.
   Example:
-      let g:better_code_blocks_show_line_numbers = 'with_highlights'
+  let g:better_code_block_show_line_numbers = 'with_highlights'
 
-- g:better_code_blocks_line_number_method (default: 'auto')
+- g:better_code_block_line_number_method (default: 'auto')
   Selects the method for displaying line numbers. Options include 'nvim' (virtual text), 'prop' (text properties), 'sign' (sign column), or 'auto' (to choose the best available).
   Example:
-      let g:better_code_blocks_line_number_method = 'nvim'
+  let g:better_code_block_line_number_method = 'nvim'
 
-- g:better_code_blocks_line_number_format (default: ' %d ')
+- g:better_code_block_line_number_format (default: ' %d ')
   Format string for line numbers, where %d is replaced by the actual line number.
   Example:
-      let g:better_code_blocks_line_number_format = ' %d '
+  let g:better_code_block_line_number_format = ' %d '
 
-- g:better_code_blocks_line_number_style (default: 'LineNr')
+- g:better_code_block_line_number_style (default: 'LineNr')
   The highlight group used for line numbers.
   Example:
-      let g:better_code_blocks_line_number_style = 'LineNr'
+  let g:better_code_block_line_number_style = 'LineNr'
 
-- g:better_code_blocks_error_style (default: 'red')
+- g:better_code_block_error_style (default: 'red')
   Specifies the style used to indicate errors (e.g., invalid line numbers).
   Example:
-      let g:better_code_blocks_error_style = 'red'
+  let g:better_code_block_error_style = 'red'
 
-- g:better_code_blocks_update_delay (default: 0)
+- g:better_code_block_update_delay (default: 0)
   Delay in milliseconds before updating highlights after changes.
   Example:
-      let g:better_code_blocks_update_delay = 0
+  let g:better_code_block_update_delay = 0
 
-- g:better_code_blocks_fence_patterns (default: ['^\(\{3,}\)', '^\(\~\{3,}\)'])
+- g:better_code_block_fence_patterns (default: ['^\(\{3,}\)', '^\(\~\{3,}\)'])
   Vim regex patterns used to detect fence lines (must capture the fence characters).
   Example:
-      let g:better_code_blocks_fence_patterns = ['^\(\{3,}\)', '^\(\~\{3,}\)']
+  let g:better_code_block_fence_patterns = ['^\(\{3,}\)', '^\(\~\{3,}\)']
 
-- g:better_code_blocks_method (default: 'background')
+- g:better_code_block_method (default: 'background')
   Determines the highlighting method. Options include 'background', 'foreground', 'underline', 'undercurl', 'bold', 'italic', and 'reverse'.
   Example:
-      let g:better_code_blocks_method = 'underline'
+  let g:better_code_block_method = 'underline'
 
 Built-in styles available: 'green', 'blue', 'yellow', 'cyan', 'magenta', 'invert', 'bold', 'italic', 'underline', 'undercurl'
 
@@ -166,39 +166,39 @@ Built-in styles available: 'green', 'blue', 'yellow', 'cyan', 'magenta', 'invert
 
 ```vim
 " Use the 'yellow' background style
-let g:better_code_blocks_style = 'yellow'
+let g:better_code_block_style = 'yellow'
 
 " Disable line numbers within code blocks
-let g:better_code_blocks_show_line_numbers = 0
+let g:better_code_block_show_line_numbers = 0
 
 " Only activate for .md files
-let g:better_code_blocks_extensions = ['md']
+let g:better_code_block_extensions = ['md']
 
 " Register and use a custom style (bold, bright cyan background)
-call BetterCodeBlocksRegisterStyle('my_cyan', 'ctermbg=cyan', 'guibg=#00FFFF', 'cterm=bold', 'gui=bold')
-let g:better_code_blocks_style = 'my_cyan'
+call BetterCodeBlockRegisterStyle('my_cyan', 'ctermbg=cyan', 'guibg=#00FFFF', 'cterm=bold', 'gui=bold')
+let g:better_code_block_style = 'my_cyan'
 ```
 
 ## Commands
 
-- `:BetterCodeBlocksRefresh` : Manually re-apply highlighting in the current buffer.
-- `:BetterCodeBlocksClear` : Clear all highlighting applied by the plugin in the current buffer.
-- `:BetterCodeBlocksToggleDebug` : Toggle debug mode on/off.
-- `:BetterCodeBlocksStyle {style}` : Change the active highlight style (e.g., `:BetterCodeBlocksStyle blue`). Supports completion for available styles.
-- `:BetterCodeBlocksToggleLineNumbers` : Toggle the display of relative line numbers on/off.
-- `:BetterCodeBlocksRegisterStyle {name} {args...}` : Register a custom highlight style. Args are pairs of `key` `value` for `highlight` command (e.g., `ctermfg`, `guibg`). Example: `:BetterCodeBlocksRegisterStyle my_error guibg=Red ctermbg=red gui=bold cterm=bold`
+- `:BetterCodeBlockRefresh` : Manually re-apply highlighting in the current buffer.
+- `:BetterCodeBlockClear` : Clear all highlighting applied by the plugin in the current buffer.
+- `:BetterCodeBlockToggleDebug` : Toggle debug mode on/off.
+- `:BetterCodeBlockStyle {style}` : Change the active highlight style (e.g., `:BetterCodeBlockStyle blue`). Supports completion for available styles.
+- `:BetterCodeBlockToggleLineNumbers` : Toggle the display of relative line numbers on/off.
+- `:BetterCodeBlockRegisterStyle {name} {args...}` : Register a custom highlight style. Args are pairs of `key` `value` for `highlight` command (e.g., `ctermfg`, `guibg`). Example: `:BetterCodeBlockRegisterStyle my_error guibg=Red ctermbg=red gui=bold cterm=bold`
 
 ## Mappings
 
 The plugin does not provide default mappings but exposes a `<Plug>` mapping for toggling:
 
-- `<Plug>(BetterCodeBlocksToggle)`: Toggles highlighting on/off for the current buffer.
+- `<Plug>(BetterCodeBlockToggle)`: Toggles highlighting on/off for the current buffer.
 
 You can map this in your configuration:
 
 ```vim
 " Example mapping: <Leader>fh to toggle highlighting
-nmap <Leader>fh <Plug>(BetterCodeBlocksToggle)
+nmap <Leader>fh <Plug>(BetterCodeBlockToggle)
 ```
 
 ## License

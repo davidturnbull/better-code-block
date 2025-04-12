@@ -1,17 +1,17 @@
-*better-code-blocks.txt*  Improved highlighting for code blocks
+*better-code-block.txt*  Improved highlighting for code blocks
 
 ===============================================================================
-CONTENTS                                        *better-code-blocks-contents*
+CONTENTS                                        *better-code-block-contents*
 
-    1. Introduction .................. |better-code-blocks-introduction|
-    2. Usage ........................ |better-code-blocks-usage|
-    3. Configuration ................ |better-code-blocks-config|
-    4. Commands ..................... |better-code-blocks-commands|
-    5. Mappings ..................... |better-code-blocks-mappings|
-    6. License ...................... |better-code-blocks-license|
+    1. Introduction .................. |better-code-block-introduction|
+    2. Usage ........................ |better-code-block-usage|
+    3. Configuration ................ |better-code-block-config|
+    4. Commands ..................... |better-code-block-commands|
+    5. Mappings ..................... |better-code-block-mappings|
+    6. License ...................... |better-code-block-license|
 
 ===============================================================================
-1. INTRODUCTION                              *better-code-blocks-introduction*
+1. INTRODUCTION                              *better-code-block-introduction*
 
 Better Code Blocks is a plugin that enhances syntax highlighting in
 Markdown code blocks by allowing you to highlight specific lines. This is
@@ -27,7 +27,7 @@ Key features:
 - Recognizes common language identifiers (like `python`, `js`, `mdx`, etc.)
 
 ===============================================================================
-2. USAGE                                          *better-code-blocks-usage*
+2. USAGE                                          *better-code-block-usage*
 
 This plugin is automatically activated when editing Markdown files. It detects
 code blocks marked with triple backticks (```) and applies highlighting
@@ -68,6 +68,6 @@ Alternative keywords:
 - Example: ```python hl="1-3" from="10"
 
 ===============================================================================
-3. CONFIGURATION                                *better-code-blocks-config*
+3. CONFIGURATION                                *better-code-block-config*
 
 ... (rest of the documentation updated accordingly) ...

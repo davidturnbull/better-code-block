@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          path: better-code-blocks
+          path: better-code-block
 
       - name: Install Vim
         run: |
@@ -27,7 +27,7 @@ jobs:
 
       - name: Run tests
         run: |
-          cd better-code-blocks
+          cd better-code-block
           # Create a script to run tests with headless Vim
           cat > run_test.sh << 'SCRIPT'
           #!/bin/bash
