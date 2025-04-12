@@ -126,9 +126,7 @@ function! s:ExtractRangeNumbers(part) abort
   return range(l:start, l:end)
 endfunction
 
-function! s:parse_range(part) abort
-  return s:ExtractRangeNumbers(a:part)
-endfunction
+
 
 " Get all line numbers in a range
 function! s:GetRangeLines(start, end)
@@ -157,27 +155,7 @@ function! s:ParseSingleLineNumber(part) abort
 endfunction
 
 " Parse a single line number
-function! s:parse_single_line(part)
-  if a:part =~# '^-\d\+$'
-    if !exists('b:mch_negative_values')
-      let b:mch_negative_values = []
-    endif
-    call add(b:mch_negative_values, a:part)
-    call s:LogDebug("Detected negative line number: " . a:part)
-    let b:mch_has_errors = 1
-    return 0
-  endif
-  if a:part =~# '-'
-    call s:LogDebug("Rejected malformed range as single line: " . a:part)
-    return 0
-  endif
-  let num = str2nr(a:part)
-  if num > 0
-    call s:LogDebug("Added single line " . num)
-    return num
-  endif
-  return 0
-endfunction
+
 
 " Parse a start value from a start specification
 function! better_code_block#parse_start_value(start_spec)
@@ -905,9 +883,7 @@ function! better_code_block#test_get_range_lines(start, end)
   return s:GetRangeLines(a:start, a:end)
 endfunction
 
-function! better_code_block#test_parse_single_line(part)
-  return s:parse_single_line(a:part)
-endfunction
+
 
 function! better_code_block#test_validate_highlight_lines(lines, block_size, start_line)
   return s:validate_highlight_lines(a:lines, a:block_size, a:start_line)
