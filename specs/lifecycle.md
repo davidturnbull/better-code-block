@@ -1,10 +1,10 @@
-# Better Code Blocks - Lifecycle
+# better-code-blocks - Lifecycle
 
-This document describes the lifecycle of the Better Fenced Code Block plugin, from initialization to cleanup, explaining how the plugin operates during different phases of Vim usage.
+This document describes the lifecycle of the better-code-blocks plugin, from initialization to cleanup, explaining how the plugin operates during different phases of Vim usage.
 
 ## Plugin Lifecycle Overview
 
-The lifecycle of the Better Fenced Code Block plugin can be divided into several distinct phases:
+The lifecycle of the better-code-blocks plugin can be divided into several distinct phases:
 
 1. **Plugin Loading** - When Vim starts and loads plugins
 2. **Buffer Activation** - When a supported file type is opened
@@ -15,13 +15,13 @@ The lifecycle of the Better Fenced Code Block plugin can be divided into several
 
 ## 1. Plugin Loading
 
-When Vim starts, it loads plugins in a specific order. The Better Fenced Code Block plugin's loading sequence is:
+When Vim starts, it loads plugins in a specific order. The better-code-blocks plugin's loading sequence is:
 
 ### 1.1. Plugin Script Loading
 
-The `plugin/fenced_code_block.vim` file is loaded first, which:
+The `plugin/better_code_blocks.vim` file is loaded first, which:
 
-- Checks if the plugin is already loaded via `g:loaded_fenced_code_block`
+- Checks if the plugin is already loaded via `g:loaded_better_code_blocks`
 - Sets default values for all configuration variables
 - Calls `s:SetupPlugin()` to initialize the plugin environment
 
@@ -29,14 +29,14 @@ The `plugin/fenced_code_block.vim` file is loaded first, which:
 
 The `s:SetupPlugin()` function:
 
-- Sets up the highlight style by calling `fenced_code_block#setup_highlight_style()`
+- Sets up the highlight style by calling `better_code_blocks#setup_highlight_style()`
 - Configures line number display if enabled
 - Creates autocommands for automatic highlighting
 - Defines plugin commands
 
 ### 1.3. Initial Highlighting
 
-If the current buffer has a supported file extension, the plugin immediately calls `fenced_code_block#apply_highlighting()` to apply highlighting to any code blocks in the current buffer.
+If the current buffer has a supported file extension, the plugin immediately calls `better_code_blocks#apply_highlighting()` to apply highlighting to any code blocks in the current buffer.
 
 ## 2. Buffer Activation
 
@@ -44,11 +44,11 @@ When a user opens a file with a supported extension (default: md, markdown, txt)
 
 ### 2.1. Filetype Plugin Loading
 
-The `ftplugin/markdown/fenced_code_block.vim` file is loaded, which:
+The `ftplugin/markdown/better_code_blocks.vim` file is loaded, which:
 
-- Checks if the plugin is already loaded for this buffer via `b:loaded_fenced_code_block`
+- Checks if the plugin is already loaded for this buffer via `b:loaded_better_code_blocks`
 - Initializes buffer-specific variables like `b:highlighting_enabled`
-- Applies initial highlighting by calling `fenced_code_block#apply_highlighting()`
+- Applies initial highlighting by calling `better_code_blocks#apply_highlighting()`
 - Sets up buffer-local mappings and autocommands
 
 ### 2.2. Autocommand Registration
@@ -68,21 +68,21 @@ The highlighting process is triggered by various events (buffer load, text chang
 Highlighting can be triggered by:
 
 - Autocommands (BufReadPost, BufWritePost, InsertLeave, TextChanged, TextChangedI)
-- User commands (`:FencedCodeBlockRefresh`)
-- Plugin functions (`fenced_code_block#enable()`, `fenced_code_block#toggle()`)
+- User commands (`:BetterCodeBlocksRefresh`)
+- Plugin functions (`better_code_blocks#enable()`, `better_code_blocks#toggle()`)
 
 ### 3.2. Debouncing (Optional)
 
-If `g:fenced_code_block_update_delay` is greater than 0, the plugin debounces rapid changes:
+If `g:better_code_blocks_update_delay` is greater than 0, the plugin debounces rapid changes:
 
 - Cancels any pending update timer
-- Starts a new timer that will call `fenced_code_block#do_apply_highlighting()` after the specified delay
+- Starts a new timer that will call `better_code_blocks#do_apply_highlighting()` after the specified delay
 
 ### 3.3. Highlight Application
 
-The `fenced_code_block#do_apply_highlighting()` function:
+The `better_code_blocks#do_apply_highlighting()` function:
 
-1. Clears previous highlights by calling `fenced_code_block#clear_highlights()`
+1. Clears previous highlights by calling `better_code_blocks#clear_highlights()`
 2. Finds code blocks in the buffer by calling `s:find_code_blocks()`
 3. For each code block:
    - Validates highlight line specifications
@@ -105,7 +105,7 @@ The `s:find_code_blocks()` function:
 
 ### 3.5. Highlight Specification Parsing
 
-The `fenced_code_block#parse_highlight_spec()` function:
+The `better_code_blocks#parse_highlight_spec()` function:
 
 1. Extracts the highlight specification from the fence line
 2. Parses it into an array of line numbers to highlight
@@ -135,34 +135,34 @@ The plugin provides several ways for users to interact with it during runtime.
 
 ### 4.1. Toggling Highlighting
 
-The `fenced_code_block#toggle()` function:
+The `better_code_blocks#toggle()` function:
 
 1. Checks the current state of `b:highlighting_enabled`
 2. Toggles the state
-3. Calls either `fenced_code_block#enable()` or `fenced_code_block#disable()`
+3. Calls either `better_code_blocks#enable()` or `better_code_blocks#disable()`
 
 ### 4.2. Changing Highlight Style
 
-The `fenced_code_block#change_highlight_style()` function:
+The `better_code_blocks#change_highlight_style()` function:
 
-1. Updates `g:fenced_code_block_style` with the new style
-2. Calls `fenced_code_block#setup_highlight_style()` to apply the new style
-3. Refreshes highlighting with `fenced_code_block#apply_highlighting()`
+1. Updates `g:better_code_blocks_style` with the new style
+2. Calls `better_code_blocks#setup_highlight_style()` to apply the new style
+3. Refreshes highlighting with `better_code_blocks#apply_highlighting()`
 
 ### 4.3. Toggling Line Numbers
 
-The `fenced_code_block#toggle_line_numbers()` function:
+The `better_code_blocks#toggle_line_numbers()` function:
 
-1. Toggles `g:fenced_code_block_show_line_numbers`
+1. Toggles `g:better_code_blocks_show_line_numbers`
 2. Calls appropriate functions to enable or disable line numbers
 3. Refreshes highlighting
 
 ### 4.4. Registering Custom Styles
 
-The `fenced_code_block#register_custom_style()` function:
+The `better_code_blocks#register_custom_style()` function:
 
 1. Parses style attributes from the command arguments
-2. Adds the new style to `g:fenced_code_block_custom`
+2. Adds the new style to `g:better_code_blocks_custom`
 
 ## 5. Buffer Cleanup
 
@@ -178,7 +178,7 @@ When the `BufLeave` event is triggered, the `s:cleanup()` function:
 
 When the `BufUnload` event is triggered, the plugin:
 
-1. Calls `fenced_code_block#clear_highlights()` to remove all highlighting
+1. Calls `better_code_blocks#clear_highlights()` to remove all highlighting
 2. Clears line numbers
 3. Releases all buffer-specific resources
 
@@ -190,24 +190,24 @@ The plugin doesn't have explicit unloading code since Vim handles this automatic
 
 The plugin uses an event-driven architecture, responding to various Vim events:
 
-| Event | Handler | Purpose |
-|-------|---------|---------|
-| `BufReadPost` | `fenced_code_block#apply_highlighting()` | Initial highlighting after buffer load |
-| `BufWritePost` | `fenced_code_block#apply_highlighting()` | Update highlighting after save |
-| `InsertLeave` | `fenced_code_block#apply_highlighting()` | Update highlighting after exiting insert mode |
-| `TextChanged` | `fenced_code_block#apply_highlighting()` | Update highlighting after text changes in normal mode |
-| `TextChangedI` | `fenced_code_block#apply_highlighting()` | Update highlighting after text changes in insert mode |
-| `CursorMovedI` | `fenced_code_block#apply_highlighting()` | Update highlighting when cursor moves in insert mode |
-| `BufLeave` | `s:cleanup()` | Clean up when leaving buffer |
-| `BufUnload` | `fenced_code_block#clear_highlights()` | Clear highlights when buffer is unloaded |
-| `ColorScheme` | `fenced_code_block#setup_highlight_style()` | Update highlight styles when colorscheme changes |
+| Event          | Handler                                      | Purpose                                               |
+| -------------- | -------------------------------------------- | ----------------------------------------------------- |
+| `BufReadPost`  | `better_code_blocks#apply_highlighting()`    | Initial highlighting after buffer load                |
+| `BufWritePost` | `better_code_blocks#apply_highlighting()`    | Update highlighting after save                        |
+| `InsertLeave`  | `better_code_blocks#apply_highlighting()`    | Update highlighting after exiting insert mode         |
+| `TextChanged`  | `better_code_blocks#apply_highlighting()`    | Update highlighting after text changes in normal mode |
+| `TextChangedI` | `better_code_blocks#apply_highlighting()`    | Update highlighting after text changes in insert mode |
+| `CursorMovedI` | `better_code_blocks#apply_highlighting()`    | Update highlighting when cursor moves in insert mode  |
+| `BufLeave`     | `s:cleanup()`                                | Clean up when leaving buffer                          |
+| `BufUnload`    | `better_code_blocks#clear_highlights()`      | Clear highlights when buffer is unloaded              |
+| `ColorScheme`  | `better_code_blocks#setup_highlight_style()` | Update highlight styles when colorscheme changes      |
 
 ## Resource Management
 
 The plugin carefully manages resources to prevent memory leaks and ensure clean operation:
 
-1. **Match IDs** - Stored in `w:fenced_code_block_match_ids` and cleared when needed
-2. **Error Match IDs** - Stored in `w:fenced_code_block_error_match_ids` and cleared when needed
+1. **Match IDs** - Stored in `w:better_code_blocks_match_ids` and cleared when needed
+2. **Error Match IDs** - Stored in `w:better_code_blocks_error_match_ids` and cleared when needed
 3. **Line Number Resources** - Managed differently based on the method:
    - Neovim namespace IDs
    - Vim text property IDs

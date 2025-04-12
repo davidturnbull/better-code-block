@@ -1,22 +1,22 @@
-# Better Code Blocks - Architecture
+# better-code-blocks - Architecture
 
-This document outlines the architectural design of the Better Fenced Code Block plugin, explaining how its components interact to provide enhanced code block highlighting in Markdown files.
+This document outlines the architectural design of the better-code-blocks plugin, explaining how its components interact to provide enhanced code block highlighting in Markdown files.
 
 ## Directory Structure
 
 The plugin follows a standard Vim plugin structure:
 
 ```
-better-better-code-blocks/
+better-code-blocks/
 ├── autoload/
-│   └── fenced_code_block.vim    # Core functionality implementation
+│   └── better_code_blocks.vim    # Core functionality implementation
 ├── plugin/
-│   └── fenced_code_block.vim    # Plugin initialization and configuration
+│   └── better_code_blocks.vim    # Plugin initialization and configuration
 ├── ftplugin/
 │   └── markdown/
-│       └── fenced_code_block.vim # Filetype-specific integration
+│       └── better_code_blocks.vim # Filetype-specific integration
 ├── syntax/
-│   └── markdown_fenced_languages.vim # Language support
+│   └── markdown_better_code_blocks_languages.vim # Language support
 ├── test/
 │   ├── highlighting.vader       # Tests for highlighting functionality
 │   └── minimal_vimrc            # Minimal configuration for tests
@@ -31,26 +31,29 @@ The plugin is organized into several logical components, each with specific resp
 
 ### 1. Configuration System
 
-**Location:** `plugin/fenced_code_block.vim`
+**Location:** `plugin/better_code_blocks.vim`
 
 The configuration system:
+
 - Defines default values for all plugin settings
 - Provides global variables for user customization
 - Sets up commands for runtime control
 - Initializes the plugin environment
 
 Key configuration variables include:
-- `g:fenced_code_block_style` - Default highlight style
-- `g:fenced_code_block_extensions` - File types to activate on
-- `g:fenced_code_block_keyword` and `g:fenced_code_block_keyword_aliases` - Keywords for highlighting
-- `g:fenced_code_block_show_line_numbers` - Line number display toggle
-- `g:fenced_code_block_line_number_method` - Method for displaying line numbers
+
+- `g:better_code_blocks_style` - Default highlight style
+- `g:better_code_blocks_extensions` - File types to activate on
+- `g:better_code_blocks_keyword` and `g:better_code_blocks_keyword_aliases` - Keywords for highlighting
+- `g:better_code_blocks_show_line_numbers` - Line number display toggle
+- `g:better_code_blocks_line_number_method` - Method for displaying line numbers
 
 ### 2. Core Highlighting System
 
-**Location:** `autoload/fenced_code_block.vim`
+**Location:** `autoload/better_code_blocks.vim`
 
 The core highlighting system:
+
 - Scans buffers for fenced code blocks
 - Parses highlight specifications
 - Applies visual highlighting to specified lines
@@ -58,31 +61,35 @@ The core highlighting system:
 - Handles cleanup and error conditions
 
 Key functions include:
-- `fenced_code_block#apply_highlighting()` - Main entry point for highlighting
-- `fenced_code_block#parse_highlight_spec()` - Extracts highlight specifications
-- `fenced_code_block#parse_highlight_attribute()` - Parses line specifications
+
+- `better_code_blocks#apply_highlighting()` - Main entry point for highlighting
+- `better_code_blocks#parse_highlight_spec()` - Extracts highlight specifications
+- `better_code_blocks#parse_highlight_attribute()` - Parses line specifications
 - `s:find_code_blocks()` - Locates code blocks in the buffer
 - `s:highlight_line()` - Applies highlighting to a specific line
 
 ### 3. Language Support System
 
-**Location:** `syntax/markdown_fenced_languages.vim`
+**Location:** `syntax/markdown_better_code_blocks_languages.vim`
 
 The language support system:
+
 - Maps language identifiers to Vim syntax files
 - Loads appropriate syntax highlighting for code blocks
 - Integrates with Vim's syntax highlighting system
 
 Key components:
+
 - `s:supported_languages` dictionary - Maps language aliases to syntax files
 - `s:load_syntax_for()` - Loads syntax for a specific language
-- `fenced_code_block#load_all_syntaxes()` - Initializes all language support
+- `better_code_blocks#load_all_syntaxes()` - Initializes all language support
 
 ### 4. Filetype Integration
 
-**Location:** `ftplugin/markdown/fenced_code_block.vim`
+**Location:** `ftplugin/markdown/better_code_blocks.vim`
 
 The filetype integration:
+
 - Activates the plugin for specific file types
 - Sets up buffer-local mappings and variables
 - Manages buffer-specific autocommands
@@ -93,6 +100,7 @@ The filetype integration:
 **Location:** `test/`
 
 The testing framework:
+
 - Provides comprehensive tests for plugin functionality
 - Uses Vader.vim for test execution
 - Includes test cases for all major features
@@ -102,16 +110,19 @@ The testing framework:
 The plugin's data flow follows this sequence:
 
 1. **Initialization**:
+
    - Plugin loads when Vim starts
    - Default configuration is established
    - Commands and autocommands are registered
 
 2. **Activation**:
+
    - When a supported file type is opened, the ftplugin is loaded
    - Buffer-local settings are initialized
    - Initial highlighting is applied
 
 3. **Highlighting Process**:
+
    - Buffer is scanned for fenced code blocks
    - Each code block's fence line is parsed for highlight specifications
    - Highlight specifications are converted to line numbers
@@ -119,6 +130,7 @@ The plugin's data flow follows this sequence:
    - Line numbers are added if enabled
 
 4. **User Interaction**:
+
    - User can toggle highlighting on/off
    - User can change highlight styles
    - User can toggle line numbers
