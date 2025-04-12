@@ -8,7 +8,11 @@
 
 # Set script to exit on error
 set -e
-cd better-code-block
+# Set up an isolated environment using a temporary HOME directory
+TEMP_HOME=$(mktemp -d -t vimtests.XXXXXX)
+export HOME="$TEMP_HOME"
+trap "rm -rf \$TEMP_HOME" EXIT
+cd "$(dirname "$0")"
 
 # Check if Vader.vim exists
 if [ ! -d "../vader.vim" ]; then
@@ -46,8 +50,8 @@ done
 
 # Run tests using the same configuration as GitHub Actions
 echo "Running tests: $TEST_FILE"
-vim -Nu <(
-  cat <<VIMRC
+vim -es -Nu <(
+  cat <<'VIMRC'
 set nocompatible
 filetype off
 set rtp+=../vader.vim
@@ -56,6 +60,6 @@ set rtp+=after
 filetype plugin indent on
 syntax enable
 VIMRC
-) -c "Vader! $TEST_FILE" $VERBOSE
+) -c "Vader! $TEST_FILE" $VERBOSE -c "qall!"
 
 echo "Tests completed!"
