@@ -481,7 +481,29 @@ function! fenced_code_block#do_apply_highlighting()
       
       " Apply highlight to specified lines within code block
       if !empty(lines_to_highlight)
-        if index(lines_to_highlight, relative_line) >= 0
+        " Check if we need to adjust highlight lines for start value
+        let adjusted_lines_to_highlight = []
+        if start_value > 1
+          " Convert absolute line numbers (adjusted by start value) back to relative lines
+          for hl_line in lines_to_highlight
+            " If highlight number is >= start_value, it should be treated as an absolute line
+            " and converted to a relative line for comparison
+            if hl_line >= start_value
+              let adjusted_line = hl_line - start_value + 1
+              if adjusted_line > 0 && adjusted_line <= code_block_lines
+                call add(adjusted_lines_to_highlight, adjusted_line)
+              endif
+            else
+              call add(adjusted_lines_to_highlight, hl_line)
+            endif
+          endfor
+          call s:debug_message("Adjusted highlight lines for start value " . start_value . ": " . 
+                \ string(lines_to_highlight) . " -> " . string(adjusted_lines_to_highlight))
+        else
+          let adjusted_lines_to_highlight = lines_to_highlight
+        endif
+        
+        if index(adjusted_lines_to_highlight, relative_line) >= 0
           call s:highlight_line(line_num)
           call s:debug_message("Highlighted line " . line_num . " (relative line " . relative_line . ")")
         endif
@@ -647,8 +669,22 @@ endfunction
 function! s:validate_highlight_lines(lines_to_highlight, code_block_lines, code_block_start)
   let has_invalid_lines = 0
   let invalid_numbers = []
+  let start_value = 1
+  
+  " Get the start value for this code block
+  let line_text = getline(a:code_block_start)
+  let start_spec = fenced_code_block#extract_start_spec(line_text)
+  if !empty(start_spec)
+    let start_value = fenced_code_block#parse_start_value(start_spec)
+  endif
   
   for line_num in a:lines_to_highlight
+    " Skip checking for lines that may be absolute line numbers matching the start value
+    if line_num >= start_value && line_num < start_value + a:code_block_lines
+      " This is a valid absolute line number (offset by start_value)
+      continue
+    endif
+    
     " Check if the line number is valid (greater than 0 and less than or equal to code_block_lines)
     if line_num <= 0 || line_num > a:code_block_lines
       call s:debug_message("Invalid line number: " . line_num . " (code block has " . a:code_block_lines . " lines)")
