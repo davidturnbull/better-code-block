@@ -168,15 +168,6 @@ let g:better_code_block_style = 'warning'
 ```
 ````
 
-### 🔸 Use tilde-style code fences
-
-```markdown
-```js hl="2"
-const n = 3;
-console.log(n); // ← highlighted
-```
-```
-
 ### 🔸 Invalid line numbers are ignored gracefully
 
 ````markdown
